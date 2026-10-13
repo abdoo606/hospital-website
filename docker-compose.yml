@@ -15,10 +15,11 @@ services:
       PORT: '4000'
       TRUST_PROXY: '1'
       COOKIE_SAMESITE: lax
-      # Generate with: openssl rand -base64 48
-      SESSION_SECRET: ${SESSION_SECRET:-change-me-before-going-live-please-32chars}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@meridianhospital.com}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Meridian#2026}
+      # These values are deliberately mandatory: never deploy the public demo secret/password.
+      # Generate SESSION_SECRET with: openssl rand -base64 48
+      SESSION_SECRET: "${SESSION_SECRET:?Set SESSION_SECRET in .env}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}"
     volumes:
       # Location of hospital.db, uploads/ and .session-secret
       - hospital-data:/app/server/data

@@ -6,6 +6,7 @@
  * The browser only ever talks to the Vite origin; Vite proxies /api and /uploads
  * to the API, so there are no CORS problems and cookies stay first-party.
  */
+import 'dotenv/config'
 import { spawn } from 'node:child_process'
 
 const children = []

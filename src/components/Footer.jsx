@@ -8,6 +8,12 @@ export default function Footer() {
   const { data, settings } = useSite()
   const tel = (value) => `tel:${String(value || '').replace(/[^\d+]/g, '')}`
   const departments = data.departments.slice(0, 6)
+  const legalLinks = [
+    ['Privacy notice', settings.privacy_notice_url],
+    ['Terms of service', settings.terms_url],
+    ['Cookie policy', settings.cookie_policy_url],
+    ['Accessibility', settings.accessibility_url],
+  ].filter(([, url]) => url)
 
   return (
     <footer className="footer">
@@ -95,12 +101,15 @@ export default function Footer() {
             © {year} {settings.legal_name || `${settings.brand_name} ${settings.brand_suffix}`}. All
             rights reserved.
           </span>
-          <span className="footer__legal">
-            <a href="#top">Privacy notice</a>
-            <a href="#top">Terms of service</a>
-            <a href="#top">Cookie policy</a>
-            <a href="#top">Accessibility</a>
-          </span>
+          {legalLinks.length > 0 && (
+            <span className="footer__legal">
+              {legalLinks.map(([label, url]) => (
+                <a key={label} href={url}>
+                  {label}
+                </a>
+              ))}
+            </span>
+          )}
         </div>
       </div>
     </footer>

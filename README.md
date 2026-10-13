@@ -1,11 +1,14 @@
 # Private Hospital Website + Patient Enquiry CMS
 
-A sellable, production-ready product for **private hospitals**: a premium English marketing website,
-a **SQLite database**, and a **staff panel** where the hospital enters its real content and works the
-patient enquiries the site collects.
+A **product foundation for private hospitals**: a premium English marketing website, a **SQLite database**,
+and a **staff panel** where hospital staff can manage content and patient enquiries.
 
-Nothing is hard-coded any more. Departments, consultants, FAQs, testimonials, insurers, photography,
-contact details and SEO are all edited by the hospital's own staff — no developer, no publishing step.
+This is a working prototype with production-oriented features — **not a compliance certification or
+ready-to-launch healthcare service**. Each hospital must supply its real content, legal notices, lawful
+processing configuration, hosting controls and security approval before it handles real patient data.
+
+Departments, consultants, FAQs, testimonials, insurers, photography, contact details and SEO are
+managed through the CMS; bundled demo content remains as an offline fallback.
 
 > Demo brand: *Meridian Private Hospital*. Re-brand it in the panel (Settings) and you have a new
 > client site.
@@ -29,18 +32,25 @@ Then open:
 | http://localhost:4000 | Everything from the API server (production build) |
 | http://localhost:4000/admin | Staff panel (production path) |
 
-**Seeded admin account** (change it at first sign-in — the panel forces this):
+**Local demo admin only** (forced password change on first sign-in):
 
 ```
 email:    admin@meridianhospital.com
 password: Meridian#2026
 ```
 
+Never deploy these public demo credentials. For a production seed, set a unique `ADMIN_EMAIL`, a
+strong `ADMIN_PASSWORD`, and a random `SESSION_SECRET` in `.env` first; production seeding refuses the
+demo password.
+
 ### Production
 
 ```bash
+cp .env.example .env
+# Edit .env: set NODE_ENV=production, SESSION_SECRET, ADMIN_EMAIL and ADMIN_PASSWORD.
+npm run db:seed
 npm run build
-NODE_ENV=production SESSION_SECRET="$(openssl rand -base64 48)" npm start   # → :4000
+npm start   # → :4000
 ```
 
 ---
@@ -64,24 +74,23 @@ facilities slots in one click.
 **Manage staff** — separate editor and administrator roles, forced own-password on first sign-in,
 disable or delete accounts, reset passwords.
 
-**Prove who did what** — an append-only activity log of every sign-in, content change, export and
-deletion, with user, time and IP.
+**Review activity** — an application-level log of sign-ins, content changes, exports and deletions,
+with user, time and IP. It is not tamper-proof; restrict server/database access and export/retain logs under hospital policy.
 
 ---
 
-## 3. Why this is a sellable product, not a demo
+## 3. What is demonstrated — and what is not yet ready for sale as compliant healthcare software
 
-| Requirement a hospital will ask about | How this build answers it |
+| Hospital question | Current status |
 | --- | --- |
-| "We must be able to update it ourselves" | Full staff panel, editor and admin roles |
-| "Where does the patient data go?" | SQLite database on the hospital's own server, not a third party |
-| "Can you prove who accessed it?" | Audit log: logins, edits, exports, deletions |
-| "What about a data protection request?" | Permanent erasure per enquiry, recorded in the log, plus CSV export |
-| "Is it secure?" | scrypt password hashing, httpOnly signed session cookies, CSRF origin guard, per-IP rate limits, parameterised SQL everywhere, server-side validation on every endpoint |
-| "Does it break if the database is down?" | The public site falls back to bundled content instead of going blank |
-| "How do you back it up?" | `npm run db:backup` — online backup API, safe while live |
-| "Will it pass an audit?" | Retention setting, privacy-first defaults, no third-party tracking |
-| "Can we test it?" | 40-check end-to-end API suite (`npm run test:api`) |
+| "Can staff update content and enquiries?" | Yes — CMS, editor/admin roles, enquiry workflow and media library are implemented. |
+| "Where is data stored?" | SQLite in the configured `DATA_DIR`; the buyer chooses and controls the hosting arrangement. |
+| "Can you audit changes?" | A basic application audit log records logins, edits, exports and deletion events. It is not tamper-proof or independently certified. |
+| "Can you complete a data-rights request?" | The UI can remove a row from the active database. It does not reconcile backups, exports, logs, WAL files or other systems. |
+| "Is it secure?" | Several controls are present, but there has been no independent penetration test, threat model, security certification or healthcare security audit. |
+| "Will it pass a privacy/security audit?" | **Not as-is.** Legal notices are placeholders, retention is not automated, there is no DPA/DPIA pack, and each hospital's controls and lawful bases need review. |
+| "Does it work when the database is down?" | The public site has a bundled content fallback; bookings cannot be stored during an outage. |
+| "Can we test it?" | The backend suite currently has 44 passing end-to-end checks. This is not browser, accessibility or penetration testing. |
 
 ---
 
@@ -101,7 +110,7 @@ server/                      Express 4 API + better-sqlite3
  ├─ routes/admin.js          content CRUD, enquiries, settings, media, users, audit, CSV
  └─ data/                    hospital.db + uploads/ (git-ignored: real patient data lives here)
 scripts/dev.mjs              runs API + Vite together
-scripts/smoke-test.mjs       40 end-to-end API checks
+scripts/smoke-test.mjs       44 end-to-end API checks
 scripts/backup.mjs           online database + uploads backup
 ```
 
@@ -148,7 +157,7 @@ developer can read the whole backend in an afternoon.
 
 ```bash
 RATE_LIMIT_DISABLED=1 npm run dev:api &     # start the API with test limits off
-npm run test:api                            # 40 end-to-end checks, cleans up after itself
+npm run test:api                            # 44 end-to-end checks, cleans up after itself
 ```
 
 The suite creates a temporary admin, exercises login, sessions, every content endpoint, the enquiry

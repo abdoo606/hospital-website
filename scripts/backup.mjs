@@ -5,6 +5,7 @@
  * website is live — no need to stop the server. Uploaded photos and the
  * database file are copied into backups/<timestamp>/.
  */
+import 'dotenv/config'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

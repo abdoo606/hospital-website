@@ -36,7 +36,7 @@ export const settings = {
   stat4_value: '98', stat4_suffix: '%', stat4_label: 'Patient satisfaction',
 
   booking_note:
-    'Typical response time: under 2 working hours. A named coordinator replies with consultant options, availability and costs.',
+    'A coordinator will contact you to discuss consultant options, availability and costs.',
   retention_months: '24',
 }
 

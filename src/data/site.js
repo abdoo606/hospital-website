@@ -31,8 +31,12 @@ export const fallbackSite = {
     hero_image: '',
     about_image: '',
     facility_image: '',
+    privacy_notice_url: '',
+    terms_url: '',
+    cookie_policy_url: '',
+    accessibility_url: '',
     booking_note:
-      'Typical response time: under 2 working hours. A named coordinator replies with consultant options, availability and costs.',
+      'A coordinator will contact you to discuss consultant options, availability and costs.',
   },
 
   stats: [

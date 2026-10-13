@@ -7,7 +7,7 @@ import facilityFallback from '../assets/facility.jpg'
 const steps = [
   {
     title: 'Tell us what you need',
-    body: 'One short online request or a single phone call. A named coordinator replies within two working hours with consultant options and costs.',
+    body: 'One short online request or a single phone call. Our patient services team follows up to discuss consultant options, availability and costs.',
   },
   {
     title: 'Meet your consultant',

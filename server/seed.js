@@ -5,6 +5,7 @@
  *   npm run db:reset     → wipe every table and re-seed (asks for confirmation unless --force)
  *   npm run db:demo      → also insert sample patient enquiries to demo the inbox
  */
+import 'dotenv/config'
 import { db, migrate, run, get, all, saveSettings, transaction } from './db.js'
 import { hashPassword, passwordProblems } from './auth.js'
 import * as seed from './seed-data.js'
@@ -100,22 +101,43 @@ function seedContent() {
 }
 
 function seedAdmin() {
-  const existing = get('SELECT id FROM users WHERE email = ?', [DEFAULT_ADMIN_EMAIL])
-  if (existing) {
-    console.log(`  · admin account already exists (${DEFAULT_ADMIN_EMAIL})`)
+  const existingCount = get('SELECT COUNT(*) AS n FROM users')?.n ?? 0
+  if (existingCount > 0) {
+    console.log(`  · ${existingCount} staff account(s) already exist; no default account added`)
     return
   }
-  const problems = passwordProblems(DEFAULT_ADMIN_PASSWORD)
+
+  const production = process.env.NODE_ENV === 'production'
+  if (production && (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)) {
+    throw new Error('Production seed requires ADMIN_EMAIL and ADMIN_PASSWORD to be set explicitly.')
+  }
+
+  const email = process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL
+  const password = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
+  const name = process.env.ADMIN_NAME || DEFAULT_ADMIN_NAME
+  if (production && password === 'Meridian#2026') {
+    throw new Error('The public demo password cannot be used for a production administrator.')
+  }
+
+  const problems = passwordProblems(password)
+  if (problems.length && production) {
+    throw new Error(`Production admin password must include ${problems.join(', ')}.`)
+  }
   if (problems.length) {
     console.warn(`  ! default admin password is weak (missing ${problems.join(', ')})`)
   }
+
   run(
     `INSERT INTO users (name, email, password_hash, role, must_change_password)
      VALUES (?, ?, ?, 'admin', 1)`,
-    [DEFAULT_ADMIN_NAME, DEFAULT_ADMIN_EMAIL, hashPassword(DEFAULT_ADMIN_PASSWORD)],
+    [name, email, hashPassword(password)],
   )
-  console.log(`  · admin account created: ${DEFAULT_ADMIN_EMAIL}`)
-  console.log(`    password: ${DEFAULT_ADMIN_PASSWORD}  (you will be asked to change it on first login)`)
+  console.log(`  · admin account created: ${email}`)
+  console.log(
+    production
+      ? '    password: supplied by the deployment operator (change it at first sign-in)'
+      : `    password: ${password}  (you will be asked to change it on first login)`,
+  )
 }
 
 function demoEnquiries() {

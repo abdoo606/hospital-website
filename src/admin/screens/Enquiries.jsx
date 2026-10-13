@@ -87,7 +87,11 @@ export default function Enquiries({ user }) {
     setSaving(true)
     try {
       await api.del(`/api/admin/appointments/${open.id}${hard ? '?hard=1' : ''}`)
-      toast(hard ? 'Enquiry permanently erased (GDPR erasure).' : 'Enquiry moved to deleted.')
+      toast(
+        hard
+          ? 'Enquiry removed from the live database. Check retained backups and exports before closing any data request.'
+          : 'Enquiry moved to deleted.',
+      )
       setConfirmDelete(null)
       setOpen(null)
       load()
@@ -399,11 +403,12 @@ export default function Enquiries({ user }) {
             <div style={{ marginTop: 26, paddingTop: 18, borderTop: '1px solid var(--a-line)' }}>
               <h3>Data protection</h3>
               <p className="small muted">
-                Use permanent erasure when a patient asks you to delete their data (GDPR Article 17).
-                The action itself is logged; the patient's details are not recoverable afterwards.
+                Follow the hospital’s approved process for a data erasure request. This action removes the
+                enquiry from the live database, but backups, exports and other retained copies need to
+                be handled separately. The deletion event is logged.
               </p>
               <button className="abtn abtn--danger abtn--sm" onClick={() => setConfirmDelete('hard')}>
-                Permanently erase this patient's data
+                Remove this enquiry from the live database
               </button>
             </div>
           )}
@@ -414,13 +419,13 @@ export default function Enquiries({ user }) {
         <Confirm
           danger
           busy={saving}
-          title={confirmDelete === 'hard' ? 'Permanently erase this enquiry?' : 'Delete this enquiry?'}
+          title={confirmDelete === 'hard' ? 'Remove this enquiry from the live database?' : 'Delete this enquiry?'}
           body={
             confirmDelete === 'hard'
-              ? 'All patient details, notes and the message will be erased from the database. This satisfies a GDPR erasure request and cannot be undone.'
+              ? 'This removes the enquiry from the live database and cannot be undone. Copies may remain in backups, exports, logs or other systems; follow the hospital’s approved process before confirming an erasure request is complete.'
               : 'The enquiry is removed from your inbox. An administrator can still recover it from the database if this was a mistake.'
           }
-          confirmLabel={confirmDelete === 'hard' ? 'Erase permanently' : 'Delete'}
+          confirmLabel={confirmDelete === 'hard' ? 'Remove live record' : 'Delete'}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => remove({ hard: confirmDelete === 'hard' })}
         />

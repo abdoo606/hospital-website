@@ -28,7 +28,7 @@ export default function Dashboard({ onNavigate }) {
       {counts.new > 0 && (
         <Alert kind="warn">
           <strong>{counts.new} new {counts.new === 1 ? 'enquiry' : 'enquiries'}</strong> waiting for a
-          first response. Patients expect a call back within two working hours.{' '}
+          first response. Set a response target your team can reliably meet, and direct emergencies to the verified emergency number.{' '}
           <button className="abtn abtn--sm" style={{ marginLeft: 8 }} onClick={() => onNavigate('enquiries')}>
             Open inbox
           </button>

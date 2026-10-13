@@ -36,13 +36,16 @@ notes** — notes are for staff only and are never shown to the patient.
 range to review last month. **Export CSV** downloads whatever is currently filtered — useful for
 monthly reporting.
 
-**Deleting patient data:** normally "Delete" just clears the enquiry from the inbox. If a patient asks
-you to erase their data (a GDPR/UK GDPR right), an administrator can use *Permanently erase this
-patient's data* inside the enquiry. That cannot be undone, and the action itself is recorded in the
-activity log.
+**Deleting an enquiry:** normally "Delete" hides it from the inbox but keeps it in the database. The
+administrator-only **Remove from live database** action permanently deletes that row and logs the
+action. This does not automatically remove copies in backups, downloaded CSVs, email, server storage
+or any connected systems. If a patient makes a data-rights request, follow the hospital's approved
+process, check those other copies and retention rules, and only then confirm completion. The software
+does not determine whether an erasure request must legally be granted.
 
-> **Response promise.** The website tells patients they will be contacted within two working hours.
-> Aim to clear the *New* column before lunch and before the end of each day.
+> **Response target.** Set the response-time message in Settings to a target your team can actually
+> meet. The inbox does not send new-enquiry notifications, so reception must monitor it or arrange
+> another alerting process. Direct emergencies to the verified emergency number.
 
 ---
 
@@ -102,8 +105,8 @@ consent) outperform stock imagery every time.
   figures (30+ specialties, 98% satisfaction, etc.). Only publish figures you can evidence.
 - **Photography** — the three main images, chosen from the media library.
 - **Search engine listing** — the page title and description that appear in Google.
-- **Booking form & data retention** — the note shown next to the submit button and how many months you
-  keep patient enquiries.
+- **Booking form & retention target** — the note next to the submit button and a target retention
+  period for your policy. Automatic deletion is not implemented; staff must apply the approved schedule.
 
 Press **Save changes** and the public website is updated within seconds.
 

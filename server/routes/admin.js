@@ -406,8 +406,8 @@ router.patch('/appointments/:id', (req, res) => {
 
 /**
  * DELETE removes an enquiry.
- *   ?hard=1  → row is erased permanently (used for GDPR "right to erasure" requests)
- *   default  → soft delete, recoverable and keeps the audit trail honest
+ *   ?hard=1  → row is removed from the active database (does not purge backups/exports)
+ *   default  → soft delete, hidden from the inbox but recoverable from the database
  */
 router.delete('/appointments/:id', (req, res) => {
   const id = v.id(req.params.id)
@@ -440,8 +440,10 @@ router.delete('/appointments/:id', (req, res) => {
 })
 
 const csvCell = (value) => {
-  const text = value === null || value === undefined ? '' : String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+  let text = value === null || value === undefined ? '' : String(value)
+  // Prevent formula injection when hospital staff open exported patient data in Excel.
+  if (/^[\u0000-\u0020\uFEFF]*[=+\-@]/.test(text)) text = `'${text}`
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
 router.get('/appointments/export.csv', (req, res) => {
@@ -500,7 +502,22 @@ const SETTING_KEYS = new Set([
   'stat3_value', 'stat3_suffix', 'stat3_label',
   'stat4_value', 'stat4_suffix', 'stat4_label',
   'booking_note', 'retention_months',
+  'privacy_notice_url', 'terms_url', 'cookie_policy_url', 'accessibility_url',
 ])
+
+const LEGAL_DOCUMENT_URLS = new Set([
+  'privacy_notice_url', 'terms_url', 'cookie_policy_url', 'accessibility_url',
+])
+
+const isSafeDocumentUrl = (value) => {
+  if (value.startsWith('/') && !value.startsWith('//') && !value.includes('\\')) return true
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && Boolean(url.hostname) && !url.username && !url.password
+  } catch {
+    return false
+  }
+}
 
 router.get('/settings', (_req, res) => {
   res.json({ settings: getSettings() })
@@ -512,6 +529,9 @@ router.put('/settings', requireAdmin, (req, res) => {
     if (!SETTING_KEYS.has(key)) continue
     const checked = v.str(value, { max: 2000, field: key })
     if (checked.error) return res.status(400).json({ error: checked.error })
+    if (LEGAL_DOCUMENT_URLS.has(key) && checked.value && !isSafeDocumentUrl(checked.value)) {
+      return res.status(400).json({ error: `${key} must be an HTTPS URL or a same-site path.` })
+    }
     patch[key] = checked.value
   }
   if (!Object.keys(patch).length) return res.status(400).json({ error: 'Nothing to update.' })

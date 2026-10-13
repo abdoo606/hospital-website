@@ -46,9 +46,13 @@ Then:
 ### Docker
 
 ```bash
+cp .env.example .env
+# Set SESSION_SECRET, ADMIN_EMAIL and ADMIN_PASSWORD in .env before the first run.
 docker compose up -d          # website + API on :4000, data in the hospital-data volume
 docker compose logs -f
 ```
+
+Compose intentionally refuses to start if the session secret or first-admin credentials are missing; it has no public demo defaults.
 
 ---
 
@@ -115,10 +119,11 @@ cp backups/2026-10-13T09-00-00/hospital.db server/data/hospital.db && npm start
 
 ## 5. Data protection checklist
 
-Patient enquiries are personal data. Under GDPR/UK GDPR the hospital is the data controller:
+Patient enquiries are personal data and may reveal health interests. The hospital will usually be the controller for its patient-intake processing, while the website vendor/host may be a processor depending on the actual roles and contract; confirm this per deployment under GDPR/UK GDPR and local law:
 
-- [ ] Retention: decide how long enquiries are kept (Settings → *Enquiry retention*), and delete
-      older records — e.g. `DELETE FROM appointments WHERE created_at < date('now','-24 months')`
+- [ ] Retention: decide the lawful period and process for enquiries. The Settings value is a policy
+      note only; no automatic purge exists. Implement and test a scheduled purge plus WAL, backup,
+      export and audit-log retention before handling real patient requests.
 - [ ] Publish a privacy notice explaining what is collected, why, how long it is kept, and who to
       contact
 - [ ] Add a cookie banner if you add analytics (this build sets no tracking cookies)
@@ -126,8 +131,10 @@ Patient enquiries are personal data. Under GDPR/UK GDPR the hospital is the data
 - [ ] Review the activity log monthly
 - [ ] Encrypt the server disk (LUKS) or the database file, and restrict SSH access
 - [ ] Sign a data processing agreement with your hosting provider
-- [ ] For erasure requests: enquiry → *Permanently erase this patient's data* (recorded in the log)
-- [ ] Keep backups encrypted and off-site, and include them in your retention policy
+- [ ] For rights requests, follow the hospital's approved workflow. The UI's hard-delete removes a row
+      from the active database only; decide how WAL files, backups, CSV exports, logs and downstream
+      systems are handled before promising a complete erasure.
+- [ ] Keep backups encrypted and off-site, and include their expiry/restore behaviour in the retention policy
 
 ---
 
@@ -137,7 +144,7 @@ Patient enquiries are personal data. Under GDPR/UK GDPR the hospital is the data
 - The Docker image includes a `HEALTHCHECK` using the same endpoint
 - Application logs go to stdout (method, path, status, duration) — collect them with journald,
   Docker logs, or your log platform
-- `npm run test:api` runs 40 end-to-end checks against a running instance. Run it after every deploy:
+- `npm run test:api` runs 44 end-to-end checks against a running instance. Run it after every deploy:
 
 ```bash
 RATE_LIMIT_DISABLED=1 npm run dev:api &      # test flag: rate limits off

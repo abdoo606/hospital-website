@@ -8,6 +8,7 @@
  *
  * Requires the API to be running (npm run dev:api).
  */
+import 'dotenv/config'
 import { db, get, run } from '../server/db.js'
 import { hashPassword } from '../server/auth.js'
 
@@ -109,6 +110,20 @@ try {
     JSON.stringify(booking.json),
   )
   const bookingRef = booking.json.reference
+
+  const formulaBooking = await api('/api/appointments', {
+    method: 'POST',
+    body: {
+      name: '=1+1',
+      email: 'csv.formula@example.com',
+      phone: '+44 7700 900124',
+      consent: true,
+      message: 'CSV formula-injection regression test.',
+    },
+  })
+  check('booking accepts a syntactically valid name beginning with a formula marker', formulaBooking.status === 201)
+  const formulaRecord = get('SELECT id FROM appointments WHERE reference = ?', [formulaBooking.json.reference])
+  if (formulaRecord) created.appointments.push(formulaRecord.id)
 
   const badEmail = await api('/api/appointments', {
     method: 'POST',
@@ -272,6 +287,10 @@ try {
       csv.bytes[2] === 0xbf,
     `first bytes: ${[...(csv.bytes || []).slice(0, 3)].join(',')}`,
   )
+  check(
+    'CSV export neutralizes formula-leading patient data',
+    csv.status === 200 && csv.text.includes("'=1+1"),
+  )
 
   const overview = await api('/api/admin/overview')
   check(
@@ -282,16 +301,26 @@ try {
   // ---------- settings ----------
   const settingsBefore = await api('/api/admin/settings')
   const originalPhone = settingsBefore.json.settings.phone
+  const originalPrivacyUrl = settingsBefore.json.settings.privacy_notice_url || ''
   const settingsPut = await api('/api/admin/settings', {
     method: 'PUT',
-    body: { phone: '+44 20 7946 0000', unknown_key: 'ignored' },
+    body: { phone: '+44 20 7946 0000', privacy_notice_url: '/privacy.html', unknown_key: 'ignored' },
   })
   check('PUT settings updates allowed keys', settingsPut.json.settings.phone === '+44 20 7946 0000')
+  check('PUT settings accepts a same-site legal notice path', settingsPut.json.settings.privacy_notice_url === '/privacy.html')
   check('PUT settings ignores unknown keys', !('unknown_key' in settingsPut.json.settings))
-  await api('/api/admin/settings', { method: 'PUT', body: { phone: originalPhone } })
+  const unsafeLegalUrl = await api('/api/admin/settings', {
+    method: 'PUT',
+    body: { privacy_notice_url: 'javascript:alert(1)' },
+  })
+  check('settings reject executable legal-document URLs', unsafeLegalUrl.status === 400)
+  await api('/api/admin/settings', {
+    method: 'PUT',
+    body: { phone: originalPhone, privacy_notice_url: originalPrivacyUrl },
+  })
 
   const publicAfterChange = await api('/api/site')
-  check('public payload reflects settings changes', typeof publicAfterChange.json.settings.phone === 'string')
+  check('public payload reflects configured public settings', typeof publicAfterChange.json.settings.phone === 'string')
 
   // ---------- media library ----------
   const png = Buffer.from(

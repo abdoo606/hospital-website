@@ -280,6 +280,33 @@ export default function Settings({ user }) {
 
       <div className="panel" style={{ marginBottom: 20 }}>
         <div className="panel__head">
+          <h2>Legal &amp; privacy documents</h2>
+        </div>
+        <div className="panel__body">
+          <Alert kind="warn">
+            Link to documents approved for this hospital and jurisdiction. Adding a URL does not itself
+            make the site compliant; have the content and data-processing setup reviewed before launch.
+            Without a privacy notice URL, the booking form displays a demo warning.
+          </Alert>
+          <div className="form-grid-2">
+            <Field label="Privacy notice URL" hint="Required before collecting real patient enquiries" span>
+              <input type="url" placeholder="https://hospital.example/privacy" {...text('privacy_notice_url')} />
+            </Field>
+            <Field label="Terms of service URL">
+              <input type="url" placeholder="https://hospital.example/terms" {...text('terms_url')} />
+            </Field>
+            <Field label="Cookie policy URL">
+              <input type="url" placeholder="https://hospital.example/cookies" {...text('cookie_policy_url')} />
+            </Field>
+            <Field label="Accessibility statement URL">
+              <input type="url" placeholder="https://hospital.example/accessibility" {...text('accessibility_url')} />
+            </Field>
+          </div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginBottom: 20 }}>
+        <div className="panel__head">
           <h2>Search engine listing</h2>
         </div>
         <div className="panel__body">
@@ -309,7 +336,7 @@ export default function Settings({ user }) {
             </Field>
             <Field
               label="Enquiry retention (months)"
-              hint="How long you keep patient enquiries before deleting them. Your privacy notice should state the same figure."
+              hint="Target retention period for your policy. Automatic expiry/deletion is not implemented yet; your team must apply and document the retention schedule."
             >
               <input type="number" {...text('retention_months')} />
             </Field>

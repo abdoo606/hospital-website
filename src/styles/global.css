@@ -2290,3 +2290,10 @@ html {
   flex: none;
   margin-top: 3px;
 }
+
+.form-demo-warning {
+  display: block;
+  margin-top: 5px;
+  color: #8c2f22;
+  font-weight: 600;
+}

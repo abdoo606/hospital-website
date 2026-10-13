@@ -66,8 +66,8 @@ export default function Login({ onSignedIn }) {
         </button>
 
         <p className="login__hint">
-          Sessions last 12 hours and are protected by an httpOnly cookie. Five failed attempts from
-          the same device will temporarily lock sign-in — call IT if you get locked out.
+          Sessions last 12 hours and are protected by an httpOnly cookie. Six failed attempts from
+          the same IP address within 15 minutes will temporarily block sign-in — call IT if you get locked out.
         </p>
       </form>
     </div>

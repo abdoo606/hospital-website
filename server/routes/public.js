@@ -74,6 +74,10 @@ function buildSitePayload() {
     about_image: settings.about_image || '',
     facility_image: settings.facility_image || '',
     booking_note: settings.booking_note || '',
+    privacy_notice_url: settings.privacy_notice_url || '',
+    terms_url: settings.terms_url || '',
+    cookie_policy_url: settings.cookie_policy_url || '',
+    accessibility_url: settings.accessibility_url || '',
   }
 
   return { settings: publicSettings, departments, consultants, faqs, testimonials, insurers, stats }

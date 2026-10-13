@@ -119,8 +119,9 @@ export default function Booking({ preselect }) {
           <span className="eyebrow">Book your appointment</span>
           <h2>Request a consultation</h2>
           <p className="lede">
-            Send us the details and a named coordinator will call you back within two working hours
-            with consultant options, availability and costs.
+            Send us a short enquiry and our patient services team will contact you to discuss
+            consultant options, availability and costs. This form requests an appointment; it does not
+            confirm a booking.
           </p>
         </div>
 
@@ -182,9 +183,10 @@ export default function Booking({ preselect }) {
                 <p className="lead-in">Your reference number is</p>
                 <code>{submitted.reference}</code>
                 <p className="lead-in">
-                  A coordinator from our {submitted.dept || 'patient services'} team will call you on{' '}
-                  {submitted.phone} within two working hours to confirm your appointment
-                  {submitted.doctor ? ` with ${submitted.doctor}` : ''}.
+                  Our {submitted.dept || 'patient services'} team will contact you on {submitted.phone}
+                  to discuss availability and costs
+                  {submitted.doctor ? ` for ${submitted.doctor}` : ''}. Your appointment is not
+                  confirmed until the hospital contacts you.
                 </p>
                 <button className="btn btn--ghost" onClick={() => setSubmitted(null)}>
                   Submit another request
@@ -291,12 +293,12 @@ export default function Booking({ preselect }) {
                   </div>
 
                   <div className="field field--full">
-                    <label htmlFor="message">Tell us briefly what you need</label>
+                    <label htmlFor="message">Optional note (no detailed medical information)</label>
                     <textarea
                       id="message"
                       value={form.message}
                       onChange={set('message')}
-                      placeholder="Symptoms, previous treatment, referral letters or anything we should know…"
+                      placeholder="In a few words, tell us what kind of appointment you are looking for. Do not include symptoms, diagnoses, medication or medical records."
                     />
                   </div>
 
@@ -321,9 +323,24 @@ export default function Booking({ preselect }) {
                       aria-invalid={Boolean(errors.consent)}
                     />
                     <span>
-                      I consent to {settings.brand_name} {settings.brand_suffix} storing these details
-                      and contacting me about my enquiry. We never share your information with third
-                      parties.
+                      I agree that {settings.brand_name} {settings.brand_suffix} may use these details
+                      to respond to my enquiry.
+                      {settings.privacy_notice_url ? (
+                        <>
+                          {' '}
+                          Please read our{' '}
+                          <a href={settings.privacy_notice_url} target="_blank" rel="noreferrer">
+                            privacy notice
+                          </a>
+                          .
+                        </>
+                      ) : (
+                        <strong className="form-demo-warning">
+                          {' '}
+                          Demo warning: no hospital privacy notice is configured. Do not submit real
+                          patient information.
+                        </strong>
+                      )}
                       {errors.consent && <b className="field__error"> {errors.consent}</b>}
                     </span>
                   </label>
@@ -346,7 +363,7 @@ export default function Booking({ preselect }) {
                       )}
                     </button>
                     <p className="form-note">
-                      {settings.booking_note || 'Typical response time: under 2 working hours.'} For
+                      {settings.booking_note || 'A coordinator will contact you to discuss next steps.'} For
                       emergencies call {settings.emergency_phone}.
                     </p>
                   </div>
