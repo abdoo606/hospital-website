@@ -9,3 +9,10 @@ dist-ssr
 .vite
 *.log
 npm-debug.log*
+
+# Runtime data: SQLite database, uploaded hospital photos, session secret.
+# Never commit patient data or credentials.
+server/data/
+
+# Local backup archives (contain patient data — keep off git)
+backups/

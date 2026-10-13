@@ -1,0 +1,27 @@
+# docker compose up -d
+#
+# Serves the public website, the API and the staff panel on port 4000,
+# keeping the database and uploaded photography in a named volume so they
+# survive container rebuilds.
+
+services:
+  hospital-cms:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
+      PORT: '4000'
+      TRUST_PROXY: '1'
+      COOKIE_SAMESITE: lax
+      # Generate with: openssl rand -base64 48
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-before-going-live-please-32chars}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@meridianhospital.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Meridian#2026}
+    volumes:
+      # Location of hospital.db, uploads/ and .session-secret
+      - hospital-data:/app/server/data
+
+volumes:
+  hospital-data:

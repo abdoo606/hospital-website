@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
-import { testimonials } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 
 export default function Testimonials() {
+  const { data } = useSite()
+  const testimonials = data.testimonials
   const [index, setIndex] = useState(0)
   const [fading, setFading] = useState(false)
   const timer = useRef(null)
@@ -16,6 +18,7 @@ export default function Testimonials() {
   }
 
   useEffect(() => {
+    if (testimonials.length < 2) return undefined
     timer.current = window.setInterval(() => {
       setFading(true)
       window.setTimeout(() => {
@@ -24,9 +27,10 @@ export default function Testimonials() {
       }, 260)
     }, 7000)
     return () => window.clearInterval(timer.current)
-  }, [])
+  }, [testimonials.length])
 
-  const t = testimonials[index]
+  if (!testimonials.length) return null
+  const t = testimonials[Math.min(index, testimonials.length - 1)]
 
   return (
     <section className="section section--ink">
@@ -48,7 +52,7 @@ export default function Testimonials() {
             <cite>
               {t.name}
               <span>
-                {t.detail} · {t.location}
+                {[t.detail, t.location].filter(Boolean).join(' · ')}
               </span>
             </cite>
           </div>
@@ -56,7 +60,7 @@ export default function Testimonials() {
           <div className="slider__dots" role="tablist" aria-label="Patient testimonials">
             {testimonials.map((item, i) => (
               <button
-                key={item.name}
+                key={item.id ?? item.name}
                 role="tab"
                 aria-current={i === index}
                 aria-label={`Testimonial ${i + 1}`}

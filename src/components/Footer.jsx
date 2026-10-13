@@ -1,10 +1,14 @@
 import Icon from './Icon.jsx'
 import { Logo } from './Header.jsx'
-import { departments, hospital } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 
 const year = new Date().getFullYear()
 
 export default function Footer() {
+  const { data, settings } = useSite()
+  const tel = (value) => `tel:${String(value || '').replace(/[^\d+]/g, '')}`
+  const departments = data.departments.slice(0, 6)
+
   return (
     <footer className="footer">
       <div className="container">
@@ -16,15 +20,15 @@ export default function Footer() {
               the UK and overseas.
             </p>
             <span className="footer__emergency">
-              <Icon name="ambulance" size={17} /> 24/7 Emergency ·{' '}
-              <a href={`tel:${hospital.emergency.replace(/\s/g, '')}`}>{hospital.emergency}</a>
+              <Icon name="ambulance" size={17} /> {settings.emergency_banner} ·{' '}
+              <a href={tel(settings.emergency_phone)}>{settings.emergency_phone}</a>
             </span>
           </div>
 
           <div>
             <h4>Departments</h4>
             <ul>
-              {departments.slice(0, 6).map((d) => (
+              {departments.map((d) => (
                 <li key={d.id}>
                   <a href="#departments">{d.name}</a>
                 </li>
@@ -64,23 +68,23 @@ export default function Footer() {
             <ul className="footer__contact">
               <li>
                 <Icon name="mapPin" size={17} />
-                <span>{hospital.address}</span>
+                <span>{settings.address}</span>
               </li>
               <li>
                 <Icon name="phone" size={17} />
                 <span>
-                  <a href={`tel:${hospital.phone.replace(/\s/g, '')}`}>{hospital.phone}</a>
+                  <a href={tel(settings.phone)}>{settings.phone}</a>
                 </span>
               </li>
               <li>
                 <Icon name="mail" size={17} />
                 <span>
-                  <a href={`mailto:${hospital.email}`}>{hospital.email}</a>
+                  <a href={`mailto:${settings.email}`}>{settings.email}</a>
                 </span>
               </li>
               <li>
                 <Icon name="clock" size={17} />
-                <span>{hospital.hours}</span>
+                <span>{settings.hours}</span>
               </li>
             </ul>
           </div>
@@ -88,7 +92,8 @@ export default function Footer() {
 
         <div className="footer__bottom">
           <span>
-            © {year} {hospital.name} {hospital.suffix}. All rights reserved.
+            © {year} {settings.legal_name || `${settings.brand_name} ${settings.brand_suffix}`}. All
+            rights reserved.
           </span>
           <span className="footer__legal">
             <a href="#top">Privacy notice</a>

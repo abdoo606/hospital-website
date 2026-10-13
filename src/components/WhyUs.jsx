@@ -1,6 +1,8 @@
 import Icon from './Icon.jsx'
-import consultationImg from '../assets/consultation.jpg'
-import facilityImg from '../assets/facility.jpg'
+import { useSite } from '../context/SiteData.jsx'
+import { resolveImage } from '../api.js'
+import consultationFallback from '../assets/consultation.jpg'
+import facilityFallback from '../assets/facility.jpg'
 
 const steps = [
   {
@@ -18,13 +20,19 @@ const steps = [
 ]
 
 export default function WhyUs() {
+  const { settings } = useSite()
+
   return (
     <>
       <section className="section" id="why">
         <div className="container">
           <div className="split">
             <div className="split__media reveal">
-              <img src={consultationImg} alt="A consultant talking with a patient in a private consulting room" />
+              <img
+                src={resolveImage(settings.about_image, consultationFallback)}
+                alt={`A consultant talking with a patient at ${settings.brand_name || 'the hospital'}`}
+                loading="lazy"
+              />
               <div className="split__badge">
                 <Icon name="clock" size={26} />
                 <span>
@@ -35,7 +43,7 @@ export default function WhyUs() {
             </div>
 
             <div className="reveal" data-delay="1">
-              <span className="eyebrow">The Meridian difference</span>
+              <span className="eyebrow">The difference</span>
               <h2>Time is the treatment</h2>
               <p className="lead-in">
                 Private medicine fails when it is rushed. We built our clinic templates around longer
@@ -80,7 +88,11 @@ export default function WhyUs() {
 
           <div className="split split--reverse" style={{ marginTop: 110 }}>
             <div className="split__media reveal">
-              <img src={facilityImg} alt="Modern imaging suite and operating theatre" />
+              <img
+                src={resolveImage(settings.facility_image, facilityFallback)}
+                alt="Modern imaging suite and operating theatre"
+                loading="lazy"
+              />
               <div className="split__badge">
                 <Icon name="scan" size={26} />
                 <span>
@@ -129,9 +141,7 @@ export default function WhyUs() {
           <div className="section-head">
             <span className="eyebrow">How it works</span>
             <h2>Three steps from enquiry to recovery</h2>
-            <p className="lede">
-              No forms to chase, no call-back queues, no surprises on the invoice.
-            </p>
+            <p className="lede">No forms to chase, no call-back queues, no surprises on the invoice.</p>
           </div>
           <div className="steps">
             {steps.map((s, i) => (

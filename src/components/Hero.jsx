@@ -1,10 +1,11 @@
 import Icon from './Icon.jsx'
-import { hospital, stats } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 import { useCountUp } from '../hooks/useScrollFx.js'
-import heroImg from '../assets/hero-hospital.jpg'
+import { resolveImage } from '../api.js'
+import heroFallback from '../assets/hero-hospital.jpg'
 
 function Stat({ value, suffix, label }) {
-  const [ref, display] = useCountUp(value)
+  const [ref, display] = useCountUp(Number(value) || 0)
   return (
     <div className="stat" ref={ref}>
       <div className="stat__value">
@@ -17,17 +18,26 @@ function Stat({ value, suffix, label }) {
 }
 
 export default function Hero() {
+  const { data, status } = useSite()
+  const { settings, stats, consultants } = data
+
+  const seniorCount = consultants.length || 8
+
   return (
     <>
       <section className="hero" id="top">
         <div className="hero__media">
-          <img src={heroImg} alt="" fetchpriority="high" />
+          <img
+            src={resolveImage(settings.hero_image, heroFallback)}
+            alt=""
+            fetchPriority="high"
+          />
         </div>
 
         <div className="container hero__inner">
           <div className="hero__badges">
             <span className="chip">
-              <Icon name="award" size={15} /> JCI Accredited
+              <Icon name="award" size={15} /> {settings.accreditations?.split('·')[0]?.trim() || 'JCI Accredited'}
             </span>
             <span className="chip">
               <Icon name="clock" size={15} /> Appointments within 48 hours
@@ -35,17 +45,18 @@ export default function Hero() {
             <span className="chip">
               <Icon name="shield" size={15} /> All major insurers accepted
             </span>
+            {status === 'fallback' && (
+              <span className="chip chip--warn" title="Live content is unavailable right now">
+                <Icon name="clock" size={15} /> Offline copy
+              </span>
+            )}
           </div>
 
           <h1>
-            Private healthcare, <em>without compromise.</em>
+            {settings.hero_heading} <em>{settings.hero_highlight}</em>
           </h1>
 
-          <p className="hero__sub">
-            Consultant-led medicine in one of Europe's most advanced private hospitals. Rapid
-            access, transparent fixed pricing, and a team that treats you as a person — not a case
-            number.
-          </p>
+          <p className="hero__sub">{settings.hero_sub}</p>
 
           <div className="hero__cta">
             <a className="btn btn--primary" href="#booking">
@@ -59,14 +70,26 @@ export default function Hero() {
           <div className="hero__trust">
             <div className="trust-item">
               <span className="avatar-stack">
-                <i style={{ background: '#0e7c8b' }}>AH</i>
-                <i style={{ background: '#b8924d' }}>DO</i>
-                <i style={{ background: '#123444' }}>SM</i>
+                {(consultants.length ? consultants.slice(0, 3) : [{}, {}, {}]).map((c, i) => (
+                  <i
+                    key={c.id ?? i}
+                    style={{ background: ['#0e7c8b', '#b8924d', '#123444'][i] || '#16a7ba' }}
+                  >
+                    {c.name
+                      ? c.name
+                          .replace(/^(Dr\.|Mr\.|Mrs\.|Ms\.|Prof\.)\s*/, '')
+                          .split(' ')
+                          .slice(0, 2)
+                          .map((w) => w[0])
+                          .join('')
+                      : '+'}
+                  </i>
+                ))}
                 <i style={{ background: '#16a7ba' }}>+</i>
               </span>
               <span>
-                <strong>180+ consultants</strong>
-                <span>across 30 specialties</span>
+                <strong>{seniorCount}+ consultants</strong>
+                <span>across {data.departments.length} specialties</span>
               </span>
             </div>
             <div className="trust-item">
@@ -99,8 +122,8 @@ export default function Hero() {
 
       <div className="container" style={{ paddingTop: 22, textAlign: 'center' }}>
         <p className="hero__addr">
-          <Icon name="mapPin" size={16} /> {hospital.address} · <Icon name="clock" size={16} />{' '}
-          {hospital.hours}
+          <Icon name="mapPin" size={16} /> {settings.address} · <Icon name="clock" size={16} />{' '}
+          {settings.hours}
         </p>
       </div>
     </>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon.jsx'
-import { departments, doctors, hospital, insurers } from '../data/site.js'
+import { api } from '../api.js'
+import { useSite } from '../context/SiteData.jsx'
 
 const emptyForm = {
   name: '',
@@ -13,18 +14,32 @@ const emptyForm = {
   funder: 'Self-funding',
   message: '',
   consent: false,
+  website: '', // honeypot — must stay empty
 }
 
-const times = ['As soon as possible', 'Morning (08:00 – 12:00)', 'Afternoon (12:00 – 17:00)', 'Evening (17:00 – 20:00)']
+const times = [
+  'As soon as possible',
+  'Morning (08:00 – 12:00)',
+  'Afternoon (12:00 – 17:00)',
+  'Evening (17:00 – 20:00)',
+]
 
 export default function Booking({ preselect }) {
+  const { data, settings } = useSite()
+  const { departments, consultants } = data
+
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
+  const [sending, setSending] = useState(false)
+  const [serverError, setServerError] = useState('')
   const [submitted, setSubmitted] = useState(null)
+
+  const tel = (value) => `tel:${String(value || '').replace(/[^\d+]/g, '')}`
 
   useEffect(() => {
     if (!preselect) return
     setSubmitted(null)
+    setServerError('')
     setForm((f) => ({
       ...f,
       dept: preselect.dept || f.dept,
@@ -37,8 +52,10 @@ export default function Booking({ preselect }) {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
     setForm((f) => ({ ...f, [key]: value }))
     setErrors((prev) => ({ ...prev, [key]: undefined }))
+    setServerError('')
   }
 
+  /** Client-side checks mirror the server's rules — the server is still authoritative. */
   const validate = () => {
     const next = {}
     if (form.name.trim().length < 2) next.name = 'Please enter your full name.'
@@ -51,7 +68,7 @@ export default function Booking({ preselect }) {
     return next
   }
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     const problems = validate()
     const firstInvalid = Object.keys(problems)[0]
@@ -59,15 +76,40 @@ export default function Booking({ preselect }) {
       document.getElementById(firstInvalid)?.focus()
       return
     }
-    const ref = `MER-${Math.floor(100000 + Math.random() * 899999)}`
-    const record = { ref, ...form, createdAt: new Date().toISOString() }
+
+    setSending(true)
+    setServerError('')
     try {
-      const store = JSON.parse(localStorage.getItem('meridian:appointments') || '[]')
-      localStorage.setItem('meridian:appointments', JSON.stringify([...store, record]))
-    } catch {
-      /* storage unavailable — the demo confirmation is still shown */
+      const result = await api.post('/api/appointments', {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        department: form.dept,
+        consultant: form.doctor,
+        date: form.date,
+        time: form.time,
+        funder: form.funder,
+        message: form.message,
+        consent: form.consent,
+        website: form.website,
+      })
+      setSubmitted({ reference: result?.reference, ...form })
+      setForm(emptyForm)
+    } catch (err) {
+      if (err.status === 429) {
+        setServerError(
+          'Too many requests from this device. Please try again shortly, or call us and we will book you in directly.',
+        )
+      } else if (err.status === 400) {
+        setServerError(err.message || 'Some details need checking. Please review the form.')
+      } else {
+        setServerError(
+          `We could not send your request right now. Please call ${settings.phone} or email ${settings.email} so we do not miss you.`,
+        )
+      }
+    } finally {
+      setSending(false)
     }
-    setSubmitted(record)
   }
 
   return (
@@ -90,8 +132,7 @@ export default function Booking({ preselect }) {
                 <span>
                   <strong>Appointments &amp; enquiries</strong>
                   <span>
-                    <a href={`tel:${hospital.phone.replace(/\s/g, '')}`}>{hospital.phone}</a> · Mon–Fri
-                    07:00–21:00, Sat 08:00–16:00
+                    <a href={tel(settings.phone)}>{settings.phone}</a> · {settings.hours}
                   </span>
                 </span>
               </li>
@@ -100,8 +141,8 @@ export default function Booking({ preselect }) {
                 <span>
                   <strong>Emergency — 24 hours</strong>
                   <span>
-                    <a href={`tel:${hospital.emergency.replace(/\s/g, '')}`}>{hospital.emergency}</a>{' '}
-                    · Walk in without an appointment
+                    <a href={tel(settings.emergency_phone)}>{settings.emergency_phone}</a> · Walk in
+                    without an appointment
                   </span>
                 </span>
               </li>
@@ -110,7 +151,7 @@ export default function Booking({ preselect }) {
                 <span>
                   <strong>Email</strong>
                   <span>
-                    <a href={`mailto:${hospital.email}`}>{hospital.email}</a>
+                    <a href={`mailto:${settings.email}`}>{settings.email}</a>
                   </span>
                 </span>
               </li>
@@ -118,14 +159,14 @@ export default function Booking({ preselect }) {
                 <Icon name="mapPin" size={20} />
                 <span>
                   <strong>Where to find us</strong>
-                  <span>{hospital.address}</span>
+                  <span>{settings.address}</span>
                 </span>
               </li>
               <li>
                 <Icon name="park" size={20} />
                 <span>
                   <strong>Parking &amp; transport</strong>
-                  <span>Free valet parking, 4 min from Knightsbridge station.</span>
+                  <span>Free valet parking, and public transport stops within a short walk.</span>
                 </span>
               </li>
             </ul>
@@ -138,23 +179,14 @@ export default function Booking({ preselect }) {
                   <Icon name="checkCircle" size={30} />
                 </span>
                 <h3>Request received, {submitted.name.split(' ')[0]}</h3>
+                <p className="lead-in">Your reference number is</p>
+                <code>{submitted.reference}</code>
                 <p className="lead-in">
-                  Your reference number is
-                </p>
-                <code>{submitted.ref}</code>
-                <p className="lead-in">
-                  A coordinator from our{' '}
-                  {submitted.dept || 'patient services'} team will call you on{' '}
+                  A coordinator from our {submitted.dept || 'patient services'} team will call you on{' '}
                   {submitted.phone} within two working hours to confirm your appointment
                   {submitted.doctor ? ` with ${submitted.doctor}` : ''}.
                 </p>
-                <button
-                  className="btn btn--ghost"
-                  onClick={() => {
-                    setForm(emptyForm)
-                    setSubmitted(null)
-                  }}
-                >
+                <button className="btn btn--ghost" onClick={() => setSubmitted(null)}>
                   Submit another request
                 </button>
               </div>
@@ -223,7 +255,7 @@ export default function Booking({ preselect }) {
                     <label htmlFor="doctor">Preferred consultant</label>
                     <select id="doctor" value={form.doctor} onChange={set('doctor')}>
                       <option value="">No preference — match me</option>
-                      {doctors
+                      {consultants
                         .filter((d) => !form.dept || d.dept === form.dept)
                         .map((d) => (
                           <option key={d.id} value={d.name}>
@@ -251,7 +283,7 @@ export default function Booking({ preselect }) {
                     <label htmlFor="funder">How are you funding treatment?</label>
                     <select id="funder" value={form.funder} onChange={set('funder')}>
                       <option>Self-funding</option>
-                      {insurers.map((i) => (
+                      {data.insurers.map((i) => (
                         <option key={i}>{i} insurance</option>
                       ))}
                       <option>Embassy / corporate sponsor</option>
@@ -268,6 +300,18 @@ export default function Booking({ preselect }) {
                     />
                   </div>
 
+                  {/* Honeypot: hidden from patients, filled by bots. */}
+                  <div className="hp-field" aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={form.website}
+                      onChange={set('website')}
+                    />
+                  </div>
+
                   <label className="consent" htmlFor="consent">
                     <input
                       id="consent"
@@ -277,19 +321,33 @@ export default function Booking({ preselect }) {
                       aria-invalid={Boolean(errors.consent)}
                     />
                     <span>
-                      I consent to Meridian Private Hospital storing these details and contacting me
-                      about my enquiry. We never share your information with third parties.
+                      I consent to {settings.brand_name} {settings.brand_suffix} storing these details
+                      and contacting me about my enquiry. We never share your information with third
+                      parties.
                       {errors.consent && <b className="field__error"> {errors.consent}</b>}
                     </span>
                   </label>
 
+                  {serverError && (
+                    <div className="form-alert" role="alert">
+                      <Icon name="shield" size={18} />
+                      <span>{serverError}</span>
+                    </div>
+                  )}
+
                   <div className="form-foot">
-                    <button className="btn btn--primary" type="submit">
-                      <Icon name="calendar" size={18} /> Request appointment
+                    <button className="btn btn--primary" type="submit" disabled={sending}>
+                      {sending ? (
+                        'Sending…'
+                      ) : (
+                        <>
+                          <Icon name="calendar" size={18} /> Request appointment
+                        </>
+                      )}
                     </button>
                     <p className="form-note">
-                      Typical response time: under 2 working hours. For emergencies call{' '}
-                      {hospital.emergency}.
+                      {settings.booking_note || 'Typical response time: under 2 working hours.'} For
+                      emergencies call {settings.emergency_phone}.
                     </p>
                   </div>
                 </div>

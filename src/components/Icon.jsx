@@ -176,6 +176,8 @@ const paths = {
   ),
 }
 
+export const iconNames = Object.keys(paths)
+
 export default function Icon({ name, size = 22, strokeWidth = 1.6, className = '', ...rest }) {
   return (
     <svg

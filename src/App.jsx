@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { SiteProvider } from './context/SiteData.jsx'
 import Header from './components/Header.jsx'
 import Hero from './components/Hero.jsx'
 import Departments from './components/Departments.jsx'
@@ -15,7 +16,7 @@ import { useActiveSection, useRevealObserver, useScrolledPast } from './hooks/us
 
 const SECTION_IDS = ['departments', 'doctors', 'why', 'patients', 'booking', 'faq']
 
-export default function App() {
+function Site() {
   const [preselect, setPreselect] = useState(null)
   const active = useActiveSection(SECTION_IDS)
   const showTop = useScrolledPast(700)
@@ -28,11 +29,9 @@ export default function App() {
   }, [])
 
   const onEnquire = useCallback((payload) => goToBooking(payload), [goToBooking])
-  const onBookDoctor = useCallback((doctor) => goToBooking({ doctor: doctor.name, dept: doctor.dept }), [goToBooking])
-
-  const scrollTop = useMemo(
-    () => () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-    [],
+  const onBookDoctor = useCallback(
+    (doctor) => goToBooking({ doctor: doctor.name, dept: doctor.dept }),
+    [goToBooking],
   )
 
   return (
@@ -59,11 +58,19 @@ export default function App() {
 
       <button
         className={`to-top ${showTop ? 'is-visible' : ''}`}
-        onClick={scrollTop}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         aria-label="Back to top"
       >
         <Icon name="chevronUp" size={20} />
       </button>
     </>
+  )
+}
+
+export default function App() {
+  return (
+    <SiteProvider>
+      <Site />
+    </SiteProvider>
   )
 }

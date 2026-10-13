@@ -2239,3 +2239,54 @@ html {
     box-shadow: var(--shadow-sm);
   }
 }
+
+/* ---------- CMS-aware additions ---------- */
+
+.chip--warn {
+  background: rgba(184, 146, 77, 0.18);
+  border-color: rgba(184, 146, 77, 0.5);
+  color: #f3e2c0;
+}
+
+.monogram--photo {
+  overflow: hidden;
+  background: var(--mist);
+  padding: 0;
+}
+
+.monogram--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.monogram--photo::after {
+  inset: -5px;
+}
+
+/* Honeypot field: hidden from humans, irresistible to bots. */
+.hp-field {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.form-alert {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-radius: var(--r-sm);
+  background: #fdf4f3;
+  border: 1px solid #f0c9c4;
+  color: #8c2f22;
+  font-size: 0.88rem;
+}
+
+.form-alert svg {
+  flex: none;
+  margin-top: 3px;
+}

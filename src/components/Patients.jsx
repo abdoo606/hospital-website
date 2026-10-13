@@ -1,5 +1,5 @@
 import Icon from './Icon.jsx'
-import { insurers } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 
 const items = [
   {
@@ -25,6 +25,9 @@ const items = [
 ]
 
 export default function Patients() {
+  const { data } = useSite()
+  const insurers = data.insurers
+
   return (
     <section className="section section--mist" id="patients">
       <div className="container">
@@ -38,24 +41,26 @@ export default function Patients() {
         </div>
 
         <div className="grid grid--2 patients__grid">
-          <div className="card patients__card reveal">
-            <h3>We are recognised by</h3>
-            <p>
-              All major UK and international insurers, with direct billing and same-day
-              pre-authorisation for most policies.
-            </p>
-            <div className="pill-row">
-              {insurers.map((i) => (
-                <span className="pill" key={i}>
-                  {i}
-                </span>
-              ))}
+          {insurers.length > 0 && (
+            <div className="card patients__card reveal">
+              <h3>We are recognised by</h3>
+              <p>
+                All major UK and international insurers, with direct billing and same-day
+                pre-authorisation for most policies.
+              </p>
+              <div className="pill-row">
+                {insurers.map((i) => (
+                  <span className="pill" key={i}>
+                    {i}
+                  </span>
+                ))}
+              </div>
+              <p className="muted patients__fine">
+                Not insured? Ask for our fixed-price self-pay packages — most patients are surprised
+                by the difference.
+              </p>
             </div>
-            <p className="muted patients__fine">
-              Not insured? Ask for our fixed-price self-pay packages — most patients are surprised
-              by the difference.
-            </p>
-          </div>
+          )}
 
           <ul className="patients__list">
             {items.map((it) => (
@@ -77,8 +82,8 @@ export default function Patients() {
             outcomes and a satisfaction score we review every single month.
           </blockquote>
           <cite>
-            Dr. Helena Vaughn
-            <span>Chief Medical Officer, Meridian Private Hospital</span>
+            Chief Medical Officer
+            <span>{data.settings.brand_name} {data.settings.brand_suffix}</span>
           </cite>
           <div className="quote-metrics">
             <div>

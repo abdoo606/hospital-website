@@ -1,31 +1,39 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon.jsx'
-import { hospital } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 import { useScrolledPast } from '../hooks/useScrollFx.js'
 
 const links = [
   { id: 'departments', label: 'Departments' },
   { id: 'doctors', label: 'Our Consultants' },
-  { id: 'why', label: 'Why Meridian' },
+  { id: 'why', label: 'Why us' },
   { id: 'patients', label: 'Patients' },
   { id: 'faq', label: 'FAQ' },
 ]
 
+const tel = (value) => `tel:${String(value || '').replace(/[^\d+]/g, '')}`
+
 export function Logo({ compact = false }) {
+  const { settings } = useSite()
   return (
-    <a href="#top" className="logo" aria-label={`${hospital.name} ${hospital.suffix} — home`}>
+    <a
+      href="#top"
+      className="logo"
+      aria-label={`${settings.brand_name} ${settings.brand_suffix} — home`}
+    >
       <span className="logo__mark">
         <Icon name="cross" size={20} strokeWidth={2.4} />
       </span>
       <span className="logo__text">
-        {hospital.name}
-        {!compact && <small>{hospital.suffix}</small>}
+        {settings.brand_name}
+        {!compact && <small>{settings.brand_suffix}</small>}
       </span>
     </a>
   )
 }
 
 export default function Header({ active }) {
+  const { settings } = useSite()
   const stuck = useScrolledPast(10)
   const [open, setOpen] = useState(false)
 
@@ -45,11 +53,11 @@ export default function Header({ active }) {
       <div className="topbar">
         <div className="container topbar__inner">
           <span className="topbar__item">
-            <Icon name="shield" size={15} /> JCI accredited · CQC registered private hospital
+            <Icon name="shield" size={15} /> {settings.accreditations}
           </span>
           <span className="topbar__item topbar__item--right">
-            <Icon name="ambulance" size={15} /> 24/7 Emergency{' '}
-            <a href={`tel:${hospital.emergency.replace(/\s/g, '')}`}>{hospital.emergency}</a>
+            <Icon name="ambulance" size={15} /> {settings.emergency_banner}{' '}
+            <a href={tel(settings.emergency_phone)}>{settings.emergency_phone}</a>
           </span>
         </div>
       </div>
@@ -67,9 +75,9 @@ export default function Header({ active }) {
           </nav>
 
           <div className="header__actions">
-            <a className="header__phone" href={`tel:${hospital.phone.replace(/\s/g, '')}`}>
+            <a className="header__phone" href={tel(settings.phone)}>
               <Icon name="phone" size={17} />
-              {hospital.phone}
+              {settings.phone}
             </a>
             <a className="btn btn--primary btn--sm header__cta" href="#booking">
               Book an appointment
@@ -100,11 +108,8 @@ export default function Header({ active }) {
           <a className="btn btn--primary btn--block" href="#booking" onClick={() => setOpen(false)}>
             Book an appointment
           </a>
-          <a
-            className="btn btn--ghost btn--block"
-            href={`tel:${hospital.emergency.replace(/\s/g, '')}`}
-          >
-            <Icon name="ambulance" size={18} /> Emergency {hospital.emergency}
+          <a className="btn btn--ghost btn--block" href={tel(settings.emergency_phone)}>
+            <Icon name="ambulance" size={18} /> Emergency {settings.emergency_phone}
           </a>
         </div>
       </div>

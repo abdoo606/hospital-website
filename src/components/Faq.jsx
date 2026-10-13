@@ -1,7 +1,13 @@
 import Icon from './Icon.jsx'
-import { faqs, hospital } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 
 export default function Faq() {
+  const { data } = useSite()
+  const { settings, faqs } = data
+  const tel = `tel:${String(settings.phone || '').replace(/[^\d+]/g, '')}`
+
+  if (!faqs.length) return null
+
   return (
     <section className="section section--mist" id="faq">
       <div className="container">
@@ -9,15 +15,15 @@ export default function Faq() {
           <span className="eyebrow">Good to know</span>
           <h2>Questions patients ask us most</h2>
           <p className="lede" style={{ marginInline: 'auto' }}>
-            Can't find your answer? Call {hospital.phone} and speak to a human within a minute.
+            Can’t find your answer? Call {settings.phone} and speak to a human within a minute.
           </p>
         </div>
 
         <div className="faq">
           {faqs.map((f, i) => (
-            <details key={f.q} open={i === 0}>
-              <summary>{f.q}</summary>
-              <p>{f.a}</p>
+            <details key={f.id ?? f.question} open={i === 0}>
+              <summary>{f.question}</summary>
+              <p>{f.answer}</p>
             </details>
           ))}
         </div>
@@ -26,8 +32,7 @@ export default function Faq() {
           <Icon name="phone" size={20} />
           <span>
             Still unsure? <a href="#booking">Send us a request</a> or call{' '}
-            <a href={`tel:${hospital.phone.replace(/\s/g, '')}`}>{hospital.phone}</a> — no call
-            centres, no automated menus.
+            <a href={tel}>{settings.phone}</a> — no call centres, no automated menus.
           </span>
         </div>
       </div>

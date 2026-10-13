@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Icon from './Icon.jsx'
-import { doctors, specialtiesList } from '../data/site.js'
+import { useSite } from '../context/SiteData.jsx'
 
 const initials = (name) =>
   name
@@ -12,19 +12,23 @@ const initials = (name) =>
     .join('')
 
 export default function Doctors({ onBook }) {
+  const { data, specialties } = useSite()
+  const consultants = data.consultants
   const [specialty, setSpecialty] = useState('All specialties')
   const [query, setQuery] = useState('')
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return doctors.filter((d) => {
+    return consultants.filter((d) => {
       const byDept = specialty === 'All specialties' || d.dept === specialty
       const byText =
         !q ||
         [d.name, d.title, d.dept, d.languages, d.credentials].join(' ').toLowerCase().includes(q)
       return byDept && byText
     })
-  }, [specialty, query])
+  }, [consultants, specialty, query])
+
+  if (!consultants.length) return null
 
   return (
     <section className="section section--mist" id="doctors">
@@ -54,7 +58,7 @@ export default function Doctors({ onBook }) {
             onChange={(e) => setSpecialty(e.target.value)}
             aria-label="Filter by specialty"
           >
-            {specialtiesList.map((s) => (
+            {specialties.map((s) => (
               <option key={s}>{s}</option>
             ))}
           </select>
@@ -70,30 +74,43 @@ export default function Doctors({ onBook }) {
             {results.map((d) => (
               <article className="card doctor anim-in" key={d.id}>
                 <div className="doctor__top">
-                  <span className="monogram">{initials(d.name)}</span>
+                  {d.photo ? (
+                    <span className="monogram monogram--photo">
+                      <img src={d.photo} alt={d.name} loading="lazy" />
+                    </span>
+                  ) : (
+                    <span className="monogram">{initials(d.name)}</span>
+                  )}
                   <div>
                     <h3 className="doctor__name">{d.name}</h3>
                     <p className="doctor__title">{d.title}</p>
-                    <span className="doctor__creds">{d.credentials}</span>
+                    {d.credentials && <span className="doctor__creds">{d.credentials}</span>}
                   </div>
                 </div>
                 <div className="doctor__body">
                   <div className="doctor__meta">
-                    <span className="stars">
-                      <Icon name="star" size={15} fill="currentColor" />
-                      {d.rating.toFixed(1)} <span className="muted">({d.reviews})</span>
-                    </span>
-                    <span>{d.years} yrs experience</span>
-                    <span>{d.languages}</span>
+                    {Number(d.rating) > 0 && (
+                      <span className="stars">
+                        <Icon name="star" size={15} fill="currentColor" strokeWidth={0} />
+                        {Number(d.rating).toFixed(1)}{' '}
+                        {d.reviews ? <span className="muted">({d.reviews})</span> : null}
+                      </span>
+                    )}
+                    {d.years ? <span>{d.years} yrs experience</span> : null}
+                    {d.languages && <span>{d.languages}</span>}
                   </div>
-                  <p className="doctor__dept">
-                    <Icon name="cross" size={14} strokeWidth={2.4} /> {d.dept}
-                  </p>
+                  {d.dept && (
+                    <p className="doctor__dept">
+                      <Icon name="cross" size={14} strokeWidth={2.4} /> {d.dept}
+                    </p>
+                  )}
                   <div className="doctor__foot">
-                    <span className="availability">
-                      <span className="dot-live" />
-                      {d.availability}
-                    </span>
+                    {d.availability && (
+                      <span className="availability">
+                        <span className="dot-live" />
+                        {d.availability}
+                      </span>
+                    )}
                     <button className="btn btn--ghost btn--sm" onClick={() => onBook(d)}>
                       Book
                     </button>
