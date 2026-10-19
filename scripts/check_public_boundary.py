@@ -7,6 +7,14 @@ ALLOWED = {
     '.gitignore', 'README.md',
     'docs/STRUCTURE.md', 'docs/WORKFLOW.md', 'docs/PUBLISHING.md',
     'scripts/check_public_boundary.py',
+    'services/changelog-bounty/README.md',
+    'services/changelog-bounty/LICENSE',
+    'services/changelog-bounty/changelog.py',
+    'services/changelog-bounty/changelog.sh',
+    'services/changelog-bounty/tests/test_changelog.py',
+    'services/changelog-bounty/examples/CHANGELOG.md',
+    'services/changelog-bounty/examples/tests.txt',
+
 }
 
 def unexpected(paths):

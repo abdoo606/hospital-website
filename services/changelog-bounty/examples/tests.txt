@@ -1,0 +1,21 @@
+test_all_categories (test_changelog.GeneratorTests.test_all_categories) ... ok
+test_annotated_tag (test_changelog.GeneratorTests.test_annotated_tag) ... ok
+test_bad_date (test_changelog.GeneratorTests.test_bad_date) ... Error: Invalid isoformat string: 'invalid'
+ok
+test_bash_entrypoint (test_changelog.GeneratorTests.test_bash_entrypoint) ... ok
+test_deterministic (test_changelog.GeneratorTests.test_deterministic) ... ok
+test_empty_repository_error (test_changelog.GeneratorTests.test_empty_repository_error) ... ok
+test_existing_file_preserved (test_changelog.GeneratorTests.test_existing_file_preserved) ... ok
+test_force (test_changelog.GeneratorTests.test_force) ... ok
+test_latest_reachable_tag (test_changelog.GeneratorTests.test_latest_reachable_tag) ... ok
+test_markdown_escaped (test_changelog.GeneratorTests.test_markdown_escaped) ... ok
+test_no_changes (test_changelog.GeneratorTests.test_no_changes) ... ok
+test_no_tag (test_changelog.GeneratorTests.test_no_tag) ... ok
+test_symlink_rejected (test_changelog.GeneratorTests.test_symlink_rejected) ... ok
+test_tag_excludes_older (test_changelog.GeneratorTests.test_tag_excludes_older) ... ok
+test_unicode_and_shell_text_not_executed (test_changelog.GeneratorTests.test_unicode_and_shell_text_not_executed) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.286s
+
+OK

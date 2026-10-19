@@ -49,5 +49,6 @@ __pycache__/
 /*.zip
 
 # Existing implementations require individual privacy/license review before publishing.
-/services/
+/services/*
+!/services/changelog-bounty/
 /tools/
