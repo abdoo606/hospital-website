@@ -20,4 +20,4 @@
 توسيع قائمة النشر يتطلب مراجعة فعلية، ولا يتم بإجبار Git على إضافة ملفات متجاهلة. جميع الأعمال على فرع الجلسة الحالي؛ لا تعديل أو حذف لفروع أخرى ضمن التنظيم.
 
 ## Portfolio Studio
-`services/portfolio-studio/` is a reviewed public frontend collection: source, entry pages, project READMEs, tests, screenshots, license and development dependency lockfile. No client records or credentials. `index.html` and `.nojekyll` support optional static hosting of the collection. Runtime data and browser test artifacts stay untracked.
+`services/portfolio-studio/` is a reviewed public frontend collection: source, entry pages, project READMEs, tests, screenshots, license and development dependency lockfile. Includes reviewed cloud source/bundle, pinned SDK dependency licenses, schema migrations and rollback-only database tests. The Supabase project URL and publishable browser key are intentionally public; no database password, service-role key, session token or customer records are included. `index.html` and `.nojekyll` support optional static hosting of the collection. Runtime data and browser test artifacts stay untracked.

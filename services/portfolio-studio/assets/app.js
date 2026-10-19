@@ -35,6 +35,7 @@ const fresh = () => ({
   rows: structuredClone(project.seed),
   extras: structuredClone(project.extras),
 });
+let cloud;
 let storageNotice = "";
 if (project) {
   state = fresh();
@@ -63,6 +64,10 @@ function toast(message, error = false) {
   toastTimer = setTimeout(() => t.remove(), 5500);
 }
 function save() {
+  if (cloud?.sync.active) {
+    cloud.sync.noteEdit();
+    return true;
+  }
   try {
     localStorage.setItem("studio:v1:" + id, JSON.stringify(state));
     return true;
@@ -76,7 +81,10 @@ function commit(message) {
   const persisted = save();
   render();
   toast(
-    persisted ? message : message + " Not saved to browser storage.",
+    persisted
+      ? message +
+          (cloud?.sync.active ? " Not synced yet — click Save to cloud." : "")
+      : message + " Not saved to browser storage.",
     !persisted,
   );
 }
@@ -121,7 +129,7 @@ function mini(p, index) {
 }
 
 function gallery() {
-  root.innerHTML = `<div class="wrap">${header()}<main><section class="hero"><div><div class="eyebrow">DIGITAL EXPERIENCES / SELECTED WORK</div><h1>Thoughtful tools.<br><span class="serif">Everyday possibilities.</span></h1><p>A collection of ten interactive web concepts. Practical workflows, considered interfaces, and the little details that make a product feel good to use.</p><div class="hero-actions"><a class="primary" href="#work">Explore the projects <span>↗</span></a><span class="quiet">10 concepts. Ready to explore.</span></div></div><div class="art" aria-hidden="true"><div class="eyebrow">A LITTLE PREVIEW OF WHAT'S INSIDE</div><div class="art-card"><div class="art-top"><span>Northstar / Demo revenue</span><span>↗</span></div><div class="art-title">A clearer picture.</div><div class="mini-bars">${[37, 55, 43, 73, 62, 88, 100].map((n) => `<i style="height:${n}%"></i>`).join("")}</div><div class="art-foot"><span>Meaningful interactions</span><span>Not just screenshots</span></div></div><div class="art-note">✳ &nbsp; Built to be explored.</div></div></section><div class="strip"><div><strong>10</strong><span>Interactive project concepts</span></div><div><strong>3</strong><span>Everyday problem spaces</span></div><div><strong>Local-first</strong><span>Your demo data stays in your browser</span></div><div><strong>Open code</strong><span>Readable source & documented tests</span></div></div><section class="work" id="work"><div class="section-head"><div><div class="eyebrow">THE COLLECTION</div><h2>Small products. Real interactions.</h2><p>Open a project, try the workflow, make it your own.</p></div><span class="quiet">01 — 10 / ${new Date().getFullYear()}</span></div><div class="filters" role="group" aria-label="Filter projects">${["All", "Business", "Productivity", "Lifestyle"].map((f) => `<button class="filter ${f === filter ? "active" : ""}" data-filter="${f}" aria-pressed="${f === filter}">${f === "All" ? "All projects" : f}</button>`).join("")}</div><div class="grid">${projects
+  root.innerHTML = `<div class="wrap">${header()}<main><section class="hero"><div><div class="eyebrow">DIGITAL EXPERIENCES / SELECTED WORK</div><h1>Thoughtful tools.<br><span class="serif">Everyday possibilities.</span></h1><p>A collection of ten interactive web concepts. Practical workflows, considered interfaces, and the little details that make a product feel good to use.</p><div class="hero-actions"><a class="primary" href="#work">Explore the projects <span>↗</span></a><span class="quiet">10 concepts. Ready to explore.</span></div></div><div class="art" aria-hidden="true"><div class="eyebrow">A LITTLE PREVIEW OF WHAT'S INSIDE</div><div class="art-card"><div class="art-top"><span>Northstar / Demo revenue</span><span>↗</span></div><div class="art-title">A clearer picture.</div><div class="mini-bars">${[37, 55, 43, 73, 62, 88, 100].map((n) => `<i style="height:${n}%"></i>`).join("")}</div><div class="art-foot"><span>Meaningful interactions</span><span>Not just screenshots</span></div></div><div class="art-note">✳ &nbsp; Built to be explored.</div></div></section><div class="strip"><div><strong>10</strong><span>Interactive project concepts</span></div><div><strong>3</strong><span>Everyday problem spaces</span></div><div><strong>Local + cloud</strong><span>Guest demo or private synced workspace</span></div><div><strong>Open code</strong><span>Readable source & documented tests</span></div></div><section class="work" id="work"><div class="section-head"><div><div class="eyebrow">THE COLLECTION</div><h2>Small products. Real interactions.</h2><p>Open a project, try the workflow, make it your own.</p></div><span class="quiet">01 — 10 / ${new Date().getFullYear()}</span></div><div class="filters" role="group" aria-label="Filter projects">${["All", "Business", "Productivity", "Lifestyle"].map((f) => `<button class="filter ${f === filter ? "active" : ""}" data-filter="${f}" aria-pressed="${f === filter}">${f === "All" ? "All projects" : f}</button>`).join("")}</div><div class="grid">${projects
     .filter((p) => filter === "All" || p.group === filter)
     .map(
       (p) =>
@@ -129,7 +137,7 @@ function gallery() {
     )
     .join(
       "",
-    )}</div></section><section class="about" id="about"><div><div class="eyebrow" style="color:#bed1b7">ABOUT THIS COLLECTION</div><h2>Built with curiosity.<br>Presented with transparency.</h2></div><p>I'm Abdulrhman. This collection was created through an AI-assisted development workflow as independent portfolio work. Every project is a browser-based prototype, not a claim of paid client delivery. Try it with fictional data, inspect the source, and see the documented scope and limitations.</p></section></main>${footer()}</div>`;
+    )}</div></section><section class="about" id="about"><div><div class="eyebrow" style="color:#bed1b7">ABOUT THIS COLLECTION</div><h2>Built with curiosity.<br>Presented with transparency.</h2></div><p>I'm Abdulrhman. This collection was created through an AI-assisted development workflow as independent portfolio work. Every project is a browser-based prototype with optional private cloud saving, not a claim of paid client delivery. Try it with fictional data, inspect the source, and see the documented scope and limitations.</p></section></main>${footer()}</div>`;
 }
 function field([key, label, type, options], value = "", prefix = "") {
   const attrs = `name="${key}" id="${prefix + key}" required`;
@@ -407,7 +415,8 @@ function render() {
         : id === "fieldwork"
           ? formBuilder()
           : table();
-  root.innerHTML = `<div class="wrap">${header()}<div class="workspace"><aside class="sidebar"><div class="eyebrow">THE COLLECTION</div>${projects.map((p) => `<a class="side-link ${id === p.id ? "selected" : ""}" ${id === p.id ? 'aria-current="page"' : ""} href="../${p.id}/"><span aria-hidden="true">${icon(p.id)}</span>${p.name}</a>`).join("")}<div class="side-note">LOCAL-FIRST DEMO<br>Changes stay in this browser. Use fictional information only. Reset restores sample data.</div></aside><main class="content"><div class="app-head"><div><div class="eyebrow">${project.category} / INTERACTIVE PROTOTYPE</div><h1>${project.name}</h1><p>${project.tagline}</p></div><div class="actions">${id === "ledger" ? btn("Print / PDF ↗", "print") : ""}${btn(id === "fieldwork" ? "Export schema ↓" : "Export CSV ↓", "export")}${btn("Reset demo", "reset")}</div></div>${storageNotice ? `<p class="notice" role="status">${e(storageNotice)}</p>` : ""}${metrics()}${controls()}${id === "daylight" ? '<p class="notice">Appointments are local and share one resource. Business hours: 09:00–17:00. No confirmation emails are sent.</p>' : ""}${id === "ledger" ? invoiceSettings() : ""}${charts()}${id === "momentum" ? `<div class="panel-header"><h2>Project workflow</h2>${search()}</div>` : ""}${special}${editor()}${history()}<p class="quiet">${id === "ledger" ? "Sample invoice only; tax rules are simplified. " : ""}No backend, authentication, live payments or external notifications. <a href="${source}/projects/${id}" target="_blank" rel="noreferrer">Read scope & source ↗</a></p></main></div>${footer()}</div>`;
+  root.innerHTML = `<div class="wrap">${header()}<div class="workspace"><aside class="sidebar"><div class="eyebrow">THE COLLECTION</div>${projects.map((p) => `<a class="side-link ${id === p.id ? "selected" : ""}" ${id === p.id ? 'aria-current="page"' : ""} href="../${p.id}/"><span aria-hidden="true">${icon(p.id)}</span>${p.name}</a>`).join("")}<div class="side-note">LOCAL + PRIVATE CLOUD<br>Try local demo data, or sign in for your own workspace. Cloud changes require Save to cloud. Use fictional data only.</div></aside><main class="content"><div class="app-head"><div><div class="eyebrow">${project.category} / INTERACTIVE PROTOTYPE</div><h1>${project.name}</h1><p>${project.tagline}</p></div><div class="actions">${id === "ledger" ? btn("Print / PDF ↗", "print") : ""}${btn(id === "fieldwork" ? "Export schema ↓" : "Export CSV ↓", "export")}${btn("Reset demo", "reset")}</div></div><section id="cloud-panel" class="cloud-panel no-print" aria-label="Cloud account">Cloud controls loading…</section><div id="cloud-workspace">${storageNotice ? `<p class="notice" role="status">${e(storageNotice)}</p>` : ""}${metrics()}${controls()}${id === "daylight" ? '<p class="notice">Appointments in this workspace share one resource. Business hours: 09:00–17:00. No confirmation emails are sent.</p>' : ""}${id === "ledger" ? invoiceSettings() : ""}${charts()}${id === "momentum" ? `<div class="panel-header"><h2>Project workflow</h2>${search()}</div>` : ""}${special}${editor()}${history()}<p class="quiet">${id === "ledger" ? "Sample invoice only; tax rules are simplified. " : ""}Optional Supabase sign-in and private cloud snapshots. No live payments or business notifications. <a href="${source}/projects/${id}" target="_blank" rel="noreferrer">Read scope & source ↗</a></p></div></main></div>${footer()}</div>`;
+  cloud?.paint();
 }
 function ask(title, message, action) {
   const dialog = document.createElement("dialog");
@@ -461,7 +470,7 @@ root.addEventListener("click", (event) => {
     if (action === "remove")
       ask(
         "Remove this entry?",
-        "This removes the selected entry from this browser. Other entries will stay unchanged.",
+        "This removes the selected entry from the current workspace. Cloud changes take effect only after Save to cloud.",
         () => {
           const next = state.rows.filter((r) => r.id !== row.id);
           if (id === "ledger")
@@ -474,7 +483,7 @@ root.addEventListener("click", (event) => {
     if (action === "reset")
       ask(
         "Restore demo data?",
-        "This will replace all changes for this project in this browser. The other nine projects are not affected.",
+        "This replaces the current project with demo data. In cloud mode, click Save to cloud to persist the reset. Other projects are not affected.",
         () => {
           state = fresh();
           editId = null;
@@ -494,7 +503,7 @@ root.addEventListener("click", (event) => {
     if (action === "resolve") {
       if (!row.owner.trim()) throw Error("Assign an owner first.");
       row.status = "Resolved";
-      commit("Ticket resolved locally.");
+      commit("Ticket marked resolved.");
     }
     if (action === "up") {
       const i = state.rows.indexOf(row);
@@ -633,3 +642,46 @@ root.addEventListener("submit", (event) => {
   }
 });
 render();
+
+if (project) {
+  import("./cloud-ui.js")
+    .then(({ mountCloud }) => {
+      cloud = mountCloud(id, {
+        read: () => state,
+        empty: () => ({
+          version: 1,
+          rows: [],
+          extras: structuredClone(project.extras),
+        }),
+        validate: (value) => restore(project, JSON.stringify(value)),
+        replace: (value) => {
+          state = value;
+          editId = null;
+          query = "";
+          render();
+        },
+        local: () => {
+          state = fresh();
+          editId = null;
+          query = "";
+          try {
+            const saved = restore(
+              project,
+              localStorage.getItem("studio:v1:" + id),
+            );
+            if (saved) state = saved;
+          } catch {}
+          render();
+        },
+        confirm: ask,
+        notify: toast,
+      });
+      cloud.paint();
+    })
+    .catch(() => {
+      const panel = document.querySelector("#cloud-panel");
+      if (panel)
+        panel.textContent =
+          "Cloud controls could not load. The local demo remains available.";
+    });
+}

@@ -1117,3 +1117,50 @@ dialog .actions {
   box-shadow: 0 10px 20px #1d3d251b;
   transform: rotate(-3deg);
 }
+
+.cloud-panel {
+  background: #e8efdd;
+  border: 1px solid #d5e0c8;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.cloud-status {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.cloud-status strong {
+  font-size: 13px;
+}
+.cloud-status span,
+.cloud-status small {
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.cloud-status small {
+  color: var(--muted);
+}
+#cloud-workspace[inert] {
+  opacity: 0.6;
+}
+.cloud-dialog {
+  max-width: 490px;
+}
+.cloud-dialog input {
+  font-size: 14px;
+}
+@media (max-width: 850px) {
+  .cloud-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cloud-panel .actions {
+    flex-wrap: wrap;
+  }
+}

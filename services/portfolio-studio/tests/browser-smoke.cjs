@@ -44,6 +44,7 @@ const fs = require("fs");
   for (const id of ids) {
     await page.goto(BASE + "/projects/" + id + "/");
     await page.locator(".metric").first().waitFor();
+    await page.locator('[data-cloud="account"]').waitFor();
     if ((await page.locator(".metric").count()) !== 3)
       throw Error(id + " metrics");
     await page.screenshot({
