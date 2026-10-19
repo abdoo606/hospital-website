@@ -12,6 +12,9 @@
 
 - [مولّد CHANGELOG من Git](services/changelog-bounty/README.md): حل مرشّح لطلب مكافأة معلن، مع 15 اختبارًا وعينة حقيقية. ليس عقدًا أو دفعة مؤكدة.
 
+- [فلتر الأوامر الخطرة](services/bash-guard/README.md): مرشح طلب 100$؛ اختبارات محلية، وليس حاجز أمان شاملًا.
+- [قالب Next.js وSQLite](services/next-sqlite-template/README.md): مرشح طلب 75$؛ البناء والاختبارات ناجحة، وتجربة السياق داخل Claude Code غير منفّذة.
+
 ## التقسيم
 
 | القسم | الغرض | النشر |
