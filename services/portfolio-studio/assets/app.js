@@ -1,3 +1,4 @@
+import { createBackup, parseBackup, MAX_BACKUP_BYTES } from "./backup.js";
 import { projects, today } from "./catalog.js";
 import {
   currency,
@@ -415,7 +416,7 @@ function render() {
         : id === "fieldwork"
           ? formBuilder()
           : table();
-  root.innerHTML = `<div class="wrap">${header()}<div class="workspace"><aside class="sidebar"><div class="eyebrow">THE COLLECTION</div>${projects.map((p) => `<a class="side-link ${id === p.id ? "selected" : ""}" ${id === p.id ? 'aria-current="page"' : ""} href="../${p.id}/"><span aria-hidden="true">${icon(p.id)}</span>${p.name}</a>`).join("")}<div class="side-note">LOCAL + PRIVATE CLOUD<br>Try local demo data, or sign in for your own workspace. Cloud changes require Save to cloud. Use fictional data only.</div></aside><main class="content"><div class="app-head"><div><div class="eyebrow">${project.category} / INTERACTIVE PROTOTYPE</div><h1>${project.name}</h1><p>${project.tagline}</p></div><div class="actions">${id === "ledger" ? btn("Print / PDF ↗", "print") : ""}${btn(id === "fieldwork" ? "Export schema ↓" : "Export CSV ↓", "export")}${btn("Reset demo", "reset")}</div></div><section id="cloud-panel" class="cloud-panel no-print" aria-label="Cloud account">Cloud controls loading…</section><div id="cloud-workspace">${storageNotice ? `<p class="notice" role="status">${e(storageNotice)}</p>` : ""}${metrics()}${controls()}${id === "daylight" ? '<p class="notice">Appointments in this workspace share one resource. Business hours: 09:00–17:00. No confirmation emails are sent.</p>' : ""}${id === "ledger" ? invoiceSettings() : ""}${charts()}${id === "momentum" ? `<div class="panel-header"><h2>Project workflow</h2>${search()}</div>` : ""}${special}${editor()}${history()}<p class="quiet">${id === "ledger" ? "Sample invoice only; tax rules are simplified. " : ""}Optional Supabase sign-in and private cloud snapshots. No live payments or business notifications. <a href="${source}/projects/${id}" target="_blank" rel="noreferrer">Read scope & source ↗</a></p></div></main></div>${footer()}</div>`;
+  root.innerHTML = `<div class="wrap">${header()}<div class="workspace"><aside class="sidebar"><div class="eyebrow">THE COLLECTION</div>${projects.map((p) => `<a class="side-link ${id === p.id ? "selected" : ""}" ${id === p.id ? 'aria-current="page"' : ""} href="../${p.id}/"><span aria-hidden="true">${icon(p.id)}</span>${p.name}</a>`).join("")}<div class="side-note">LOCAL + PRIVATE CLOUD<br>Try local demo data, or sign in for your own workspace. Cloud changes require Save to cloud. Use fictional data only.</div></aside><main class="content"><div class="app-head"><div><div class="eyebrow">${project.category} / INTERACTIVE PROTOTYPE</div><h1>${project.name}</h1><p>${project.tagline}</p></div><div class="actions">${id === "ledger" ? btn("Print / PDF ↗", "print") : ""}${btn(id === "fieldwork" ? "Export schema ↓" : "Export CSV ↓", "export")}${btn("Backup JSON ↓", "backup")}${btn("Restore JSON ↑", "restore-backup")}<input type="file" id="backup-file" accept="application/json,.json" aria-label="Choose project backup" hidden>${btn("Reset demo", "reset")}</div></div><section id="cloud-panel" class="cloud-panel no-print" aria-label="Cloud account">Cloud controls loading…</section><div id="cloud-workspace">${storageNotice ? `<p class="notice" role="status">${e(storageNotice)}</p>` : ""}${metrics()}${controls()}${id === "daylight" ? '<p class="notice">Appointments in this workspace share one resource. Business hours: 09:00–17:00. No confirmation emails are sent.</p>' : ""}${id === "ledger" ? invoiceSettings() : ""}${charts()}${id === "momentum" ? `<div class="panel-header"><h2>Project workflow</h2>${search()}</div>` : ""}${special}${editor()}${history()}<p class="quiet">${id === "ledger" ? "Sample invoice only; tax rules are simplified. " : ""}Optional Supabase sign-in and private cloud snapshots. No live payments or business notifications. <a href="${source}/projects/${id}" target="_blank" rel="noreferrer">Read scope & source ↗</a></p></div></main></div>${footer()}</div>`;
   cloud?.paint();
 }
 function ask(title, message, action) {
@@ -435,6 +436,52 @@ function ask(title, message, action) {
   dialog.showModal();
   dialog.querySelector("[data-dismiss]").focus();
 }
+let pendingBackupContext;
+function backupContext() {
+  return {
+    generation: cloud?.sync.generation,
+    snapshot: JSON.stringify(state),
+  };
+}
+function assertBackupContext(context) {
+  if (cloud?.sync.locked || cloud?.sync.status === "saving")
+    throw Error("Wait for a successful cloud load or save before restoring.");
+  if (
+    context.generation !== cloud?.sync.generation ||
+    context.snapshot !== JSON.stringify(state)
+  )
+    throw Error(
+      "Workspace changed while choosing the backup. Please choose it again.",
+    );
+}
+root.addEventListener("change", async (event) => {
+  if (event.target.id !== "backup-file") return;
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  const context = pendingBackupContext || backupContext();
+  pendingBackupContext = null;
+  try {
+    assertBackupContext(context);
+    if (file.size > MAX_BACKUP_BYTES)
+      throw Error("Backup exceeds the 2 MiB limit.");
+    const restored = parseBackup(project, await file.text());
+    assertBackupContext(context);
+    ask(
+      "Replace this workspace?",
+      `Restore ${restored.rows.length} entries and project settings? This replaces, not merges, the current data. Keep a backup first. Cloud changes require Save to cloud.`,
+      () => {
+        assertBackupContext(context);
+        state = restored;
+        editId = null;
+        query = "";
+        commit("Backup restored.");
+      },
+    );
+  } catch (error) {
+    toast(error.message, true);
+  }
+});
 root.addEventListener("click", (event) => {
   const filterButton = event.target.closest("[data-filter]");
   if (filterButton) {
@@ -455,6 +502,17 @@ root.addEventListener("click", (event) => {
   const action = button.dataset.action,
     row = state.rows.find((r) => r.id === button.dataset.id);
   try {
+    if (action === "backup")
+      download(
+        `${id}-backup.json`,
+        createBackup(project, state),
+        "application/json",
+      );
+    if (action === "restore-backup") {
+      assertBackupContext(backupContext());
+      pendingBackupContext = backupContext();
+      document.querySelector("#backup-file").click();
+    }
     if (action === "edit") {
       editId = row.id;
       render();

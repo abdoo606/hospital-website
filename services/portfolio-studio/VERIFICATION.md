@@ -29,3 +29,11 @@ The original baseline had no cloud features. For the new Auth/cloud increment an
 - **Not verified:** real browser-to-Supabase signup/login/email confirmation end-to-end, public SMTP delivery, production deployment durability, full security review. These are distinct from live database-role tests and mocked browser integration.
 
 A follow-up deployed migration rejects SQL-NULL shape checks (including a JSON null version); the null-version regression and all-ten-app transactional test also passed.
+
+## Backup increment — 2026-10-19
+
+- **72 unit tests passed**: 57 existing plus round-trip tests for all ten projects and five format/validation/size/envelope checks.
+- **15 mocked cloud/backup browser flows passed**: previous eleven plus full JSON download, wrong-project rejection, restore cancellation and explicit cloud restore remaining unsaved.
+- Original **10 routes / 15 browser workflows / zero page exceptions** still pass, including mobile overflow checks.
+- Full JSON restores are explicit replacements, not merges or automatic uploads. CSV remains available but is not a full-state backup.
+- Live email/Auth and permanent hosting limitations above remain unchanged.

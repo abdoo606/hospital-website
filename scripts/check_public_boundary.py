@@ -81,6 +81,8 @@ ALLOWED = {
     'services/portfolio-studio/tests/model.test.js',
     'services/portfolio-studio/.prettierignore',
     'services/portfolio-studio/THIRD_PARTY_NOTICES.md',
+    'services/portfolio-studio/assets/backup.js',
+    'services/portfolio-studio/tests/backup.test.js',
     'services/portfolio-studio/assets/cloud-client.js',
     'services/portfolio-studio/assets/cloud-config.js',
     'services/portfolio-studio/assets/cloud-source.js',

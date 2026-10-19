@@ -34,6 +34,14 @@ Each `projects/<id>/` folder has its own entry page and scope documentation. The
 
 Guest demo data is isolated under `studio:v1:<project>` in localStorage. Signed-in cloud workspaces are separate, start empty and require explicit **Save to cloud**; data is stored per user and application in Supabase. Authentication session tokens use the SDK's browser storage. See [database architecture](backend/README.md). Reset affects only that project and asks for confirmation. Guest storage failures are reported; invalid guest state falls back to demo data. Cloud load failures instead lock editing and never silently fall back to guest data. Displayed user text is HTML-escaped; CSV cells are quoted and spreadsheet formula prefixes neutralized. These measures are not a comprehensive security audit.
 
+## Full workspace backups
+
+Use **Backup JSON** to download rows and project settings, including invoice settings, inventory history and habit check-ins. Unlike CSV, this is a restorable workspace document. It does not automatically include your login session or cloud account identity. The file is plain text, not encrypted: keep it private and use fictional data only.
+
+**Restore JSON** accepts this application's versioned backup format (up to 2 MiB), checks the project and domain data, then asks before replacing the entire current workspace. It does not merge records. Cancel or invalid files leave data unchanged. An identity/workspace change while selecting or confirming a file cancels the operation. Restore is unavailable while cloud loading, conflicted or saving; backup download remains available to rescue unsaved edits.
+
+To move a guest demo to your private workspace, download its backup first, sign in, then explicitly restore the file and click **Save to cloud**. Restore alone does not upload it. Cloud size constraints still apply; a locally accepted backup is not a guarantee that a cloud save will succeed. Back up the destination before replacing it. Browser-local storage failures are surfaced rather than reported as persisted.
+
 ## Verification
 
 ```sh

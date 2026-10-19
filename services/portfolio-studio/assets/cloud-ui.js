@@ -10,6 +10,11 @@ export function mountCloud(appId, hooks) {
     if (work) work.inert = sync.locked;
     const reset = document.querySelector('[data-action="reset"]');
     if (reset) reset.disabled = sync.locked;
+    const restoreBackup = document.querySelector(
+      '[data-action="restore-backup"]',
+    );
+    if (restoreBackup)
+      restoreBackup.disabled = sync.locked || sync.status === "saving";
     let message =
       sync.error ||
       {

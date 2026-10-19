@@ -94,6 +94,25 @@ const OUT = path.resolve(__dirname, "../test-results");
     await page.locator("#entry-quantity").fill("1");
     await page.locator("#entry-price").fill("10");
     await page.locator('[data-form="entry"] button[type="submit"]').click();
+    const backupDownload = page.waitForEvent("download");
+    await page.locator('[data-action="backup"]').click();
+    const backup = await backupDownload;
+    const backupText = fs.readFileSync(await backup.path(), "utf8");
+    const backupDocument = JSON.parse(backupText);
+    assert.equal(backupDocument.app, "ledger");
+    assert.ok(backupText.includes("Guest only"));
+    const upload = async (text) =>
+      page.locator("#backup-file").setInputFiles({
+        name: "backup.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(text),
+      });
+    await upload(JSON.stringify({ ...backupDocument, app: "stockroom" }));
+    await page
+      .locator(".toast.error")
+      .filter({ hasText: "different project" })
+      .waitFor();
+    assert.equal(await page.locator("dialog").count(), 0);
     await page.locator('[data-cloud="account"]').click();
     await page.locator('.cloud-dialog [name="email"]').fill(user.email);
     await page
@@ -108,6 +127,30 @@ const OUT = path.resolve(__dirname, "../test-results");
       await page.getByText("Guest only", { exact: true }).count(),
       0,
     );
+    assert.equal(saveCalls, 0);
+    // Explicit import only: cancel leaves the cloud workspace empty.
+    await upload(backupText);
+    await page.locator("dialog [data-dismiss]").click();
+    assert.equal(
+      await page.getByText("Guest only", { exact: true }).count(),
+      0,
+    );
+    await upload(backupText);
+    await page.locator("dialog [data-confirm]").click();
+    await page.getByText("Guest only", { exact: true }).waitFor();
+    assert.equal(saveCalls, 0);
+    assert.match(
+      await page.locator("#cloud-panel").innerText(),
+      /Unsaved cloud edits/,
+    );
+    // Restore an empty backup so the original regression suite stays independent.
+    await upload(
+      JSON.stringify({
+        ...backupDocument,
+        state: { ...backupDocument.state, rows: [] },
+      }),
+    );
+    await page.locator("dialog [data-confirm]").click();
     assert.equal(saveCalls, 0);
     await page.locator("#entry-description").fill("Private cloud item");
     await page.locator("#entry-quantity").fill("2");
@@ -200,6 +243,10 @@ const OUT = path.resolve(__dirname, "../test-results");
           status: "PASS",
           network: "Mocked Supabase Auth and REST, no live emails",
           flows: [
+            "backup-download",
+            "wrong-project-backup-rejected",
+            "restore-cancel",
+            "explicit-cloud-restore-unsaved",
             "sign-in",
             "no-guest-auto-import",
             "explicit-save",
@@ -219,7 +266,7 @@ const OUT = path.resolve(__dirname, "../test-results");
       ),
     );
     console.log(
-      "PASS: 11 mocked cloud browser flows; no live Auth/email claim.",
+      "PASS: 15 mocked cloud/backup browser flows; no live Auth/email claim.",
     );
   } finally {
     await browser.close();
