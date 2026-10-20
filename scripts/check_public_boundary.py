@@ -4,6 +4,11 @@ import subprocess
 import sys
 
 ALLOWED = {
+    'services/fullstack-milestone/Dockerfile',
+    'services/fullstack-milestone/.dockerignore',
+    'services/fullstack-milestone/compose.yaml',
+    'services/fullstack-milestone/tsconfig.server.json',
+
     'services/fullstack-milestone/.gitignore',
     'services/fullstack-milestone/README.md',
     'services/fullstack-milestone/index.html',

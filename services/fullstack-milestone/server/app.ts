@@ -41,6 +41,14 @@ export function application(
     });
     next();
   });
+  app.get("/healthz", async (_q, r) => {
+    try {
+      await db.query("SELECT 1");
+      r.json({ status: "ok" });
+    } catch {
+      r.status(503).json({ status: "unavailable" });
+    }
+  });
   app.use("/api", express.json({ limit: "16kb" }));
   app.use("/api", (q, r, next) => {
     if (!["GET", "HEAD", "OPTIONS"].includes(q.method)) {

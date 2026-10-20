@@ -121,3 +121,33 @@ test("SQL metacharacters remain literal task data", async () => {
   await a.post("/api/tasks").send({ title }).expect(201);
   assert.equal((await a.get("/api/tasks").expect(200)).body[0].title, title);
 });
+
+test("readiness checks database without leaking infrastructure details", async () => {
+  const healthy = await request(app).get("/healthz").expect(200);
+  assert.deepEqual(healthy.body, { status: "ok" });
+  const broken = application({
+    query: async () => {
+      throw new Error("secret database hostname");
+    },
+    close: async () => {},
+  });
+  const response = await request(broken).get("/healthz").expect(503);
+  assert.deepEqual(response.body, { status: "unavailable" });
+});
+test("explicit production origin and Secure cookie are enforced", async () => {
+  const secureApp = application(db, {
+    origin: "https://app.example",
+    secure: true,
+  });
+  await request(secureApp)
+    .post("/api/auth/login")
+    .set("Origin", "https://other.example")
+    .send({ email: "alice@example.test", password: "test-password-123" })
+    .expect(403);
+  const response = await request(secureApp)
+    .post("/api/auth/login")
+    .set("Origin", "https://app.example")
+    .send({ email: "alice@example.test", password: "test-password-123" })
+    .expect(200);
+  assert.match(String(response.headers["set-cookie"]), /; Secure/);
+});

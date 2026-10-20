@@ -71,3 +71,21 @@ Verified locally on 2026-10-20: **10 integration tests passed**, TypeScript chec
 Not production-ready by assertion: missing email verification, password recovery, MFA, pagination beyond 200, centralized rate limiting, operational logging/monitoring, scheduled expired-session cleanup, backups and deployment-managed migrations. The test suite is not a substitute for those controls. Registration can reveal that an email is already present via its conflict response. Concurrent signup sessions and repeated login sessions are not globally limited.
 
 Before adapting this to a real request, agree the business entity, acceptance criteria, deployment, pricing and any necessary access with the requester. No customer data or credentials are included.
+
+## Container packaging (not executed in the development sandbox)
+
+A multi-stage Dockerfile builds and tests the app, then runs compiled JavaScript as a non-root user without development dependencies. `/healthz` checks the database and returns only `ok` or `unavailable` (503 on failure). Local Compose uses a real PostgreSQL 17 container on a private network, with no published database port. Docker is not installed in the development sandbox, so the image build and Compose integration are **provided but not runtime-verified**.
+
+```sh
+# Run from this service directory on a machine with Docker Compose.
+# Generate a URL-safe hex password; this is for the local review database only.
+export POSTGRES_PASSWORD="$(node -e "process.stdout.write(require('crypto').randomBytes(24).toString('hex'))")"
+docker compose up --build
+# Open http://localhost:3001
+# Stop while retaining the database:
+docker compose down
+```
+
+Preserve the generated password securely for subsequent runs against the same volume. Changing the variable does not rotate an existing database's password. Do not use `down -v` unless deliberately deleting local review data. Pulling base images requires access to Docker Hub. This local configuration disables production mode to support HTTP localhost; **do not expose it as a production deployment**. For real deployment, configure an HTTPS reverse proxy, exact `APP_ORIGIN`, production mode and a securely managed external database connection string.
+
+The server can also be run without `tsx` after `npm run build` using `npm run start:compiled`. Two additional API tests cover database readiness failure and explicit-origin/Secure-cookie behavior. Current API suite: **12 passing tests**. Compilation and API tests do not prove the Docker image or external PostgreSQL integration has been exercised.

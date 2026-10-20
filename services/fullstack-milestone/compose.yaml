@@ -1,0 +1,29 @@
+# Local review only. No cloud provisioning. Generate a new development password.
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: milestone
+      POSTGRES_DB: milestone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a unique local POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U milestone -d milestone"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  app:
+    build: .
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://milestone:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@database:5432/milestone
+      APP_ORIGIN: http://localhost:3001
+      PORT: 3001
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+volumes:
+  postgres-data:
