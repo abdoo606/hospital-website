@@ -4,6 +4,21 @@ import subprocess
 import sys
 
 ALLOWED = {
+    'services/fullstack-milestone/.gitignore',
+    'services/fullstack-milestone/README.md',
+    'services/fullstack-milestone/index.html',
+    'services/fullstack-milestone/package.json',
+    'services/fullstack-milestone/package-lock.json',
+    'services/fullstack-milestone/tsconfig.json',
+    'services/fullstack-milestone/vite.config.ts',
+    'services/fullstack-milestone/migrations/001_initial.sql',
+    'services/fullstack-milestone/server/app.ts',
+    'services/fullstack-milestone/server/db.ts',
+    'services/fullstack-milestone/server/index.ts',
+    'services/fullstack-milestone/src/main.tsx',
+    'services/fullstack-milestone/src/style.css',
+    'services/fullstack-milestone/tests/api.test.ts',
+
     '.gitignore', 'README.md',
     'docs/STRUCTURE.md', 'docs/WORKFLOW.md', 'docs/PUBLISHING.md',
     'scripts/check_public_boundary.py',

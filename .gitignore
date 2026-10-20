@@ -57,3 +57,5 @@ __pycache__/
 !/services/next-sqlite-template/
 
 !/services/portfolio-studio/
+
+!/services/fullstack-milestone/
